@@ -1,9 +1,8 @@
-#define _MESSAGE_LOOP_
 #include <Windows.h>
 
 int Run() {
 	MSG msg = {};
-	while (GetMessage(&msg, NULL, 0, 0) > 0) 
+	while (GetMessage(&msg, NULL, 0, 0) > 0)
 	{
 		TranslateMessage(&msg);
 		DispatchMessageW(&msg);
