@@ -38,3 +38,22 @@ bool WindowClass::CheckRegister() {
 bool WindowClass::CheckCreation() {
 	return (hWnd_ != NULL);
 }
+
+void WindowClass::RegisterRawInputDevice() {
+
+	// Мышь
+	rid_[0].usUsagePage = 0x01;
+	rid_[0].usUsage = 0x02;
+	rid_[0].dwFlags = 0;
+	rid_[0].hwndTarget = hWnd_;
+
+	// Клавиатура
+	rid_[1].usUsagePage = 0x01;
+	rid_[1].usUsage = 0x06;
+	rid_[1].dwFlags = 0;
+	rid_[1].hwndTarget = hWnd_;
+
+	if (RegisterRawInputDevices(rid_, 2, sizeof(RAWINPUTDEVICE)) == FALSE) {
+		MessageBoxW(hWnd_, L"Failed to register raw input devices", L"Error", MB_OK);
+	}
+}

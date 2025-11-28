@@ -8,6 +8,7 @@ private:
 	HINSTANCE hPrevInstance_;
 	WNDCLASSEX wc_;
 	HWND hWnd_ = nullptr;
+	RAWINPUTDEVICE rid_[2];
 public:
 	WindowClass(HINSTANCE hInstance, HINSTANCE hPrevInstance) : hInstance_(hInstance), hPrevInstance_(hPrevInstance) {}
 	void initWindow(WNDPROC WndProc);
@@ -15,5 +16,6 @@ public:
 	void ShowWnd();
 	void UpdateWnd();
 	bool CheckRegister();
+	void RegisterRawInputDevice();
 	bool CheckCreation();
 };
