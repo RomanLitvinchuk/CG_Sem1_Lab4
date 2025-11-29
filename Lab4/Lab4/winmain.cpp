@@ -35,6 +35,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	MyFramework.CreateRTVAndDSVDescriptorHeaps();
 	MyFramework.CreateRTV();
 	MyFramework.CreateDSV();
+	MyFramework.SetViewport();
+	MyFramework.SetScissor();
 
 	wnd.RegisterRawInputDevice();
 	wnd.ShowWnd();

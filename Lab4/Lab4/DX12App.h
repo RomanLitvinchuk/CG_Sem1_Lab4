@@ -23,6 +23,8 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV() const;
 	void CreateRTV();
 	void CreateDSV();
+	void SetViewport();
+	void SetScissor();
 private:
 	void EnableDebug();
 
@@ -52,4 +54,7 @@ private:
 
 	ComPtr<ID3D12Resource> m_swap_chain_buffer_[2];
 	ComPtr<ID3D12Resource> m_DSV_buffer;
+
+	D3D12_VIEWPORT vp_;
+	D3D12_RECT m_scissor_rect_;
 };

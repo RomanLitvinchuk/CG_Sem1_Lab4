@@ -137,3 +137,20 @@ void DX12App::CreateDSV() {
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_DSV_buffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	m_command_list_->ResourceBarrier(1, &barrier);
 }
+
+void DX12App::SetViewport() {
+	vp_.TopLeftX = 0.0f;
+	vp_.TopLeftY = 0.0f;
+	vp_.Width = static_cast<float>(m_client_width_);
+	vp_.Height = static_cast<float>(m_client_height_);
+	vp_.MinDepth = 0.0f;
+	vp_.MaxDepth = 1.0f;
+	m_command_list_->RSSetViewports(1, &vp_);
+	std::cout << "Viewport is set" << std::endl;
+}
+
+void DX12App::SetScissor() {
+	m_scissor_rect_ = { 0, 0, 400, 300 };
+	m_command_list_->RSSetScissorRects(1, &m_scissor_rect_);
+	std::cout << "Scissor is set" << std::endl;
+}
