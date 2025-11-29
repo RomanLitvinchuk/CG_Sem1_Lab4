@@ -7,7 +7,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
     case WM_INPUT:
     {
-        std::cout << "WM_INPUT received!" << std::endl;
         UINT dwSize = 0;
 
         GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize,
@@ -26,8 +25,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         if (raw->header.dwType == RIM_TYPEMOUSE)
         {
-            std::cout << "Mouse input: X=" << raw->data.mouse.lLastX
-                << " Y=" << raw->data.mouse.lLastY << std::endl;
             if (raw->data.mouse.usFlags == MOUSE_MOVE_RELATIVE)
             {
                 int x = raw->data.mouse.lLastX;
@@ -43,8 +40,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         else if (raw->header.dwType == RIM_TYPEKEYBOARD)
         {
-            std::cout << "Keyboard input: VKey=" << raw->data.keyboard.VKey
-                << " ScanCode=" << raw->data.keyboard.MakeCode << std::endl;
             RAWKEYBOARD& keyboard = raw->data.keyboard;
 
             UINT virtualKey = keyboard.VKey;
@@ -53,8 +48,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             bool keyDown = !(flags & RI_KEY_BREAK);
 
-            std::cout << "Key " << (keyDown ? "DOWN" : "UP")
-                << ": " << virtualKey << std::endl;
         }
 
         delete[] lpb;
