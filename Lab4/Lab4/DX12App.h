@@ -13,9 +13,11 @@ using namespace DirectX;
 class DX12App
 {
 public:
-	void Initialize();
+	void InitializeDevice();
+	void InitializeCommandObjects();
 private:
 	void EnableDebug();
+
 	ComPtr<ID3D12Device> m_device_;
 	ComPtr<ID3D12Fence> m_fence_;
 	UINT mRTVDescriptorSize_ = 0;
@@ -23,4 +25,8 @@ private:
 	UINT mCbvSrvUavDescriptorSize_ = 0;
 	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels_;
 	DXGI_FORMAT mBackBufferFormat_;
+
+	ComPtr<ID3D12CommandQueue> m_command_queue_;
+	ComPtr<ID3D12CommandAllocator> m_direct_cmd_list_alloc_;
+	ComPtr<ID3D12CommandList> m_command_list_;
 };

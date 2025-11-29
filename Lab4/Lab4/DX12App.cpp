@@ -12,7 +12,7 @@ void DX12App::EnableDebug() {
 }
 
 
-void DX12App::Initialize() {
+void DX12App::InitializeDevice() {
 	EnableDebug();
 	ComPtr<IDXGIFactory4> mdxgiFactory;
 	ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&mdxgiFactory)));
@@ -39,4 +39,16 @@ void DX12App::Initialize() {
 	ThrowIfFailed(m_device_->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &msQualityLevels_, sizeof(msQualityLevels_)));
 	if (msQualityLevels_.NumQualityLevels > 0) { std::cout << "MSAA 4x is supported" << std::endl;} 
 	else { std::cout << "WARNING! MSAA 4x is NOT supported" << std::endl; }
+}
+
+void DX12App::InitializeCommandObjects() {
+	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+	ThrowIfFailed(m_device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_command_queue_)));
+	std::cout << "Command queue is created" << std::endl;
+	ThrowIfFailed(m_device_->CreateCommandAllocator(queueDesc.Type, IID_PPV_ARGS(&m_direct_cmd_list_alloc_)));
+	std::cout << "Command allocatoris is created" << std::endl;
+	ThrowIfFailed(m_device_->CreateCommandList(0, queueDesc.Type, m_direct_cmd_list_alloc_.Get(), nullptr, IID_PPV_ARGS(&m_command_list_)));
+	std::cout << "Command list is created" << std::endl;
 }

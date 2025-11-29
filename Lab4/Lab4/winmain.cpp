@@ -20,7 +20,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 {
 
 	DX12App MyFramework;
-	MyFramework.Initialize();
+	MyFramework.InitializeDevice();
+	MyFramework.InitializeCommandObjects();
 	WindowClass wnd(hInstance, hPrevInstance);
 	wnd.initWindow(WndProc);
 	wnd.CheckRegister();
