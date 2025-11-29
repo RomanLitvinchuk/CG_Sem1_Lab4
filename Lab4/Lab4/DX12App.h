@@ -21,4 +21,6 @@ private:
 	UINT mRTVDescriptorSize_ = 0;
 	UINT mDSVDescriptorSize_ = 0;
 	UINT mCbvSrvUavDescriptorSize_ = 0;
+	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels_;
+	DXGI_FORMAT mBackBufferFormat_;
 };

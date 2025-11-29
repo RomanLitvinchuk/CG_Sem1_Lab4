@@ -30,4 +30,13 @@ void DX12App::Initialize() {
 		<< "DSV size: " << std::to_string(mDSVDescriptorSize_) << "\n"
 		<< "CbvSrvUav size:" << std::to_string(mCbvSrvUavDescriptorSize_) << std::endl;
 
+	mBackBufferFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;
+	msQualityLevels_.Format = mBackBufferFormat_;
+	msQualityLevels_.SampleCount = 4;
+	msQualityLevels_.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
+	msQualityLevels_.NumQualityLevels = 0;
+
+	ThrowIfFailed(m_device_->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &msQualityLevels_, sizeof(msQualityLevels_)));
+	if (msQualityLevels_.NumQualityLevels > 0) { std::cout << "MSAA 4x is supported" << std::endl;} 
+	else { std::cout << "WARNING! MSAA 4x is NOT supported" << std::endl; }
 }
