@@ -5,6 +5,7 @@
 #include <dxgi1_6.h>
 #include <wrl.h>
 #include <comdef.h>
+#include <DescriptorHeap.h>
 #include "throw_if_failed.h"
 
 using namespace Microsoft::WRL;
@@ -16,6 +17,10 @@ public:
 	void InitializeDevice();
 	void InitializeCommandObjects();
 	void CreateSwapChain(HWND hWnd);
+	void CreateRTVAndDSVDescriptorHeaps();
+	D3D12_CPU_DESCRIPTOR_HANDLE GetBackBuffer() const;
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV() const;
+
 private:
 	void EnableDebug();
 
@@ -26,9 +31,9 @@ private:
 	ComPtr<IDXGIFactory4> m_dxgi_factory_;
 	ComPtr<ID3D12Device> m_device_;
 	ComPtr<ID3D12Fence> m_fence_;
-	UINT mRTVDescriptorSize_ = 0;
-	UINT mDSVDescriptorSize_ = 0;
-	UINT mCbvSrvUavDescriptorSize_ = 0;
+	UINT m_RTV_descriptor_size_ = 0;
+	UINT m_DSV_descriptor_size_ = 0;
+	UINT m_CbvSrvUav_descriptor_size_ = 0;
 	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels_;
 	
 
@@ -37,4 +42,8 @@ private:
 	ComPtr<ID3D12CommandList> m_command_list_;
 	
 	ComPtr<IDXGISwapChain> m_swap_chain_;
+
+	ComPtr<ID3D12DescriptorHeap> m_RTV_heap_;
+	ComPtr<ID3D12DescriptorHeap> m_DSV_heap_;
+	int m_current_back_buffer_ = 0;
 };

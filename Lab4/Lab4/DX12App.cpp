@@ -1,4 +1,5 @@
 #include "DX12App.h"
+#include "d3dx12.h"
 #include <iostream>
 
 void DX12App::EnableDebug() {
@@ -22,12 +23,12 @@ void DX12App::InitializeDevice() {
 	ThrowIfFailed(m_device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence_)));
 	std::cout << "FENCE CREATED" << std::endl;
 
-	mRTVDescriptorSize_ = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	mDSVDescriptorSize_ = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-	mCbvSrvUavDescriptorSize_ = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	std::cout << "RTV size: " << std::to_string(mRTVDescriptorSize_) << "\n"
-		<< "DSV size: " << std::to_string(mDSVDescriptorSize_) << "\n"
-		<< "CbvSrvUav size:" << std::to_string(mCbvSrvUavDescriptorSize_) << std::endl;
+	m_RTV_descriptor_size_ = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	m_DSV_descriptor_size_ = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	m_CbvSrvUav_descriptor_size_ = m_device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	std::cout << "RTV size: " << std::to_string(m_RTV_descriptor_size_) << "\n"
+		<< "DSV size: " << std::to_string(m_DSV_descriptor_size_) << "\n"
+		<< "CbvSrvUav size:" << std::to_string(m_CbvSrvUav_descriptor_size_) << std::endl;
 
 	msQualityLevels_.Format = m_back_buffer_format_;
 	msQualityLevels_.SampleCount = 4;
@@ -73,4 +74,30 @@ void DX12App::CreateSwapChain(HWND hWnd) {
 	ThrowIfFailed(m_dxgi_factory_->CreateSwapChain(m_command_queue_.Get(), &swDesc, &m_swap_chain_));
 	std::cout << "Swap chain is created" << std::endl;
 	
+}
+
+void DX12App::CreateRTVAndDSVDescriptorHeaps() {
+	D3D12_DESCRIPTOR_HEAP_DESC RTVHeapDesc;
+	RTVHeapDesc.NumDescriptors = 2;
+	RTVHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	RTVHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	RTVHeapDesc.NodeMask = 0;
+	ThrowIfFailed(m_device_->CreateDescriptorHeap(&RTVHeapDesc, IID_PPV_ARGS(&m_RTV_heap_)));
+	std::cout << "RTV heap is created" << std::endl;
+
+	D3D12_DESCRIPTOR_HEAP_DESC DSVHeapDesc;
+	DSVHeapDesc.NumDescriptors = 1;
+	DSVHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	DSVHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	DSVHeapDesc.NodeMask = 0;
+	ThrowIfFailed(m_device_->CreateDescriptorHeap(&DSVHeapDesc, IID_PPV_ARGS(&m_DSV_heap_)));
+	std::cout << "DSV heap is created" << std::endl;
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE DX12App::GetBackBuffer() const {
+	return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_RTV_heap_->GetCPUDescriptorHandleForHeapStart(), m_current_back_buffer_, m_RTV_descriptor_size_);
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE DX12App::GetDSV() const {
+	return m_DSV_heap_->GetCPUDescriptorHandleForHeapStart();
 }
