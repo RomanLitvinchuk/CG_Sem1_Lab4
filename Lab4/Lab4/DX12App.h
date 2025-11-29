@@ -22,10 +22,12 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetBackBuffer() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV() const;
 	void CreateRTV();
+	void CreateDSV();
 private:
 	void EnableDebug();
 
 	DXGI_FORMAT m_back_buffer_format_ = DXGI_FORMAT_R8G8B8A8_UNORM;
+	DXGI_FORMAT m_depth_stencil_format_ = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	UINT m_client_width_ = 800;
 	UINT m_client_height_ = 600;
 
@@ -40,7 +42,7 @@ private:
 
 	ComPtr<ID3D12CommandQueue> m_command_queue_;
 	ComPtr<ID3D12CommandAllocator> m_direct_cmd_list_alloc_;
-	ComPtr<ID3D12CommandList> m_command_list_;
+	ComPtr<ID3D12GraphicsCommandList> m_command_list_;
 	
 	ComPtr<IDXGISwapChain> m_swap_chain_;
 
@@ -49,4 +51,5 @@ private:
 	int m_current_back_buffer_ = 0;
 
 	ComPtr<ID3D12Resource> m_swap_chain_buffer_[2];
+	ComPtr<ID3D12Resource> m_DSV_buffer;
 };

@@ -111,3 +111,29 @@ void DX12App::CreateRTV() {
 	}
 	std::cout << "RTV is created" << std::endl;
 }
+
+void DX12App::CreateDSV() {
+	D3D12_RESOURCE_DESC dsDesc;
+	dsDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	dsDesc.Alignment = 0;
+	dsDesc.Width = m_client_width_;
+	dsDesc.Height = m_client_height_;
+	dsDesc.DepthOrArraySize = 1;
+	dsDesc.MipLevels = 1;
+	dsDesc.Format = m_depth_stencil_format_;
+	dsDesc.SampleDesc.Count = 1;
+	dsDesc.SampleDesc.Quality = 0;
+	dsDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	dsDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	D3D12_CLEAR_VALUE clrValue;
+	clrValue.Format = m_depth_stencil_format_;
+	clrValue.DepthStencil.Depth = 1.0f;
+	clrValue.DepthStencil.Stencil = 0;
+	CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+	ThrowIfFailed(m_device_->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &dsDesc, D3D12_RESOURCE_STATE_COMMON, &clrValue, IID_PPV_ARGS(&m_DSV_buffer)));
+	std::cout << "DSV is created" << std::endl;
+	m_device_->CreateDepthStencilView(m_DSV_buffer.Get(), nullptr, GetDSV());
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_DSV_buffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	m_command_list_->ResourceBarrier(1, &barrier);
+}
