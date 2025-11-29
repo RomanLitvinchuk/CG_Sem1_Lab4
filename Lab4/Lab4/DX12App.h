@@ -16,4 +16,9 @@ public:
 	void Initialize();
 private:
 	void EnableDebug();
+	ComPtr<ID3D12Device> m_device_;
+	ComPtr<ID3D12Fence> m_fence_;
+	UINT mRTVDescriptorSize_ = 0;
+	UINT mDSVDescriptorSize_ = 0;
+	UINT mCbvSrvUavDescriptorSize_ = 0;
 };
