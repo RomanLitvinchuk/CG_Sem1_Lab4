@@ -101,3 +101,13 @@ D3D12_CPU_DESCRIPTOR_HANDLE DX12App::GetBackBuffer() const {
 D3D12_CPU_DESCRIPTOR_HANDLE DX12App::GetDSV() const {
 	return m_DSV_heap_->GetCPUDescriptorHandleForHeapStart();
 }
+
+void DX12App::CreateRTV() {
+	CD3DX12_CPU_DESCRIPTOR_HANDLE RTV_heap_handle_(m_RTV_heap_->GetCPUDescriptorHandleForHeapStart());
+	for (UINT i = 0; i < 2; i++) {
+		ThrowIfFailed(m_swap_chain_->GetBuffer(i, IID_PPV_ARGS(&m_swap_chain_buffer_[i])));
+		m_device_->CreateRenderTargetView(m_swap_chain_buffer_[i].Get(), nullptr, RTV_heap_handle_);
+		RTV_heap_handle_.Offset(1, m_RTV_descriptor_size_);
+	}
+	std::cout << "RTV is created" << std::endl;
+}

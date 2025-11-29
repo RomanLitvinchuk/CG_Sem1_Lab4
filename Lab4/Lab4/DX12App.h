@@ -6,6 +6,7 @@
 #include <wrl.h>
 #include <comdef.h>
 #include <DescriptorHeap.h>
+#include <d3dx12.h>
 #include "throw_if_failed.h"
 
 using namespace Microsoft::WRL;
@@ -20,7 +21,7 @@ public:
 	void CreateRTVAndDSVDescriptorHeaps();
 	D3D12_CPU_DESCRIPTOR_HANDLE GetBackBuffer() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV() const;
-
+	void CreateRTV();
 private:
 	void EnableDebug();
 
@@ -46,4 +47,6 @@ private:
 	ComPtr<ID3D12DescriptorHeap> m_RTV_heap_;
 	ComPtr<ID3D12DescriptorHeap> m_DSV_heap_;
 	int m_current_back_buffer_ = 0;
+
+	ComPtr<ID3D12Resource> m_swap_chain_buffer_[2];
 };

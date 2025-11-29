@@ -33,6 +33,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	MyFramework.InitializeCommandObjects();
 	MyFramework.CreateSwapChain(g_hWnd);
 	MyFramework.CreateRTVAndDSVDescriptorHeaps();
+	MyFramework.CreateRTV();
 
 	wnd.RegisterRawInputDevice();
 	wnd.ShowWnd();
