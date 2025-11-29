@@ -7,7 +7,7 @@
 #include "window_class.h"
 #include "DX12App.h"
 #pragma comment(linker, "/entry:wWinMainCRTStartup")
-//HWND g_hWnd = 0;
+HWND g_hWnd = 0;
 
 using namespace DirectX;
 using namespace DX12;
@@ -19,17 +19,20 @@ int Run();
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
 
-	DX12App MyFramework;
-	MyFramework.InitializeDevice();
-	MyFramework.InitializeCommandObjects();
 	WindowClass wnd(hInstance, hPrevInstance);
 	wnd.initWindow(WndProc);
 	wnd.CheckRegister();
 	wnd.CreateWnd();
-	
 	if (!wnd.CheckCreation()) {
 		return 0;
 	}
+	g_hWnd = wnd.getHWND();
+
+	DX12App MyFramework;
+	MyFramework.InitializeDevice();
+	MyFramework.InitializeCommandObjects();
+	MyFramework.CreateSwapChain(g_hWnd);
+
 	wnd.RegisterRawInputDevice();
 	wnd.ShowWnd();
 	wnd.UpdateWnd();

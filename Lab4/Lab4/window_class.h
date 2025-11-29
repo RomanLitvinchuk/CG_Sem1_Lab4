@@ -18,4 +18,5 @@ public:
 	bool CheckRegister();
 	void RegisterRawInputDevice();
 	bool CheckCreation();
+	HWND getHWND() const { return hWnd_; }
 };
