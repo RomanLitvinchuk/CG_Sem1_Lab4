@@ -1,6 +1,8 @@
 #include "DX12App.h"
 #include "d3dx12.h"
 #include <iostream>
+#include <string>
+#include <DirectXColors.h>
 
 void DX12App::EnableDebug() {
 #if defined(DEBUG) || defined(_DEBUG)
@@ -50,6 +52,7 @@ void DX12App::InitializeCommandObjects() {
 	std::cout << "Command allocatoris is created" << std::endl;
 	ThrowIfFailed(m_device_->CreateCommandList(0, queueDesc.Type, m_direct_cmd_list_alloc_.Get(), nullptr, IID_PPV_ARGS(&m_command_list_)));
 	std::cout << "Command list is created" << std::endl;
+	ThrowIfFailed(m_command_list_->Close());
 }
 
 void DX12App::CreateSwapChain(HWND hWnd) {
@@ -102,6 +105,11 @@ D3D12_CPU_DESCRIPTOR_HANDLE DX12App::GetDSV() const {
 	return m_DSV_heap_->GetCPUDescriptorHandleForHeapStart();
 }
 
+ID3D12Resource* DX12App::CurrentBackBuffer() const {
+	return m_swap_chain_buffer_[m_current_back_buffer_].Get();
+}
+
+
 void DX12App::CreateRTV() {
 	CD3DX12_CPU_DESCRIPTOR_HANDLE RTV_heap_handle_(m_RTV_heap_->GetCPUDescriptorHandleForHeapStart());
 	for (UINT i = 0; i < 2; i++) {
@@ -153,4 +161,56 @@ void DX12App::SetScissor() {
 	m_scissor_rect_ = { 0, 0, 400, 300 };
 	m_command_list_->RSSetScissorRects(1, &m_scissor_rect_);
 	std::cout << "Scissor is set" << std::endl;
+}
+
+void DX12App::CalculateGameStats(GameTimer& gt, HWND hWnd) {
+	static int frameCnt= 0;
+	static float timeElapsed = 0.0f;
+
+	frameCnt++;
+
+	if ((gt.TotalTime() - timeElapsed) >= 1.0f) {
+		float fps = (float)frameCnt;
+		float mspf = 1000.0f / fps;
+		std::wstring WindowString = L"WINDOW  fps: " + std::to_wstring(fps) + L"mspf: " + std::to_wstring(mspf);
+		SetWindowText(hWnd, WindowString.c_str());
+
+		frameCnt = 0;
+		timeElapsed += 1.0f;
+	}
+}
+
+void DX12App::WaitForGPU()
+{
+	if (m_fence_->GetCompletedValue() < m_current_fence_)
+	{
+		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+		m_fence_->SetEventOnCompletion(m_current_fence_, eventHandle);
+		WaitForSingleObject(eventHandle, INFINITE);
+		CloseHandle(eventHandle);
+	}
+}
+
+
+void DX12App::Draw(const GameTimer& gt) {
+	WaitForGPU();
+	ThrowIfFailed(m_command_list_->Reset(m_direct_cmd_list_alloc_.Get(), nullptr));
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	m_command_list_->ResourceBarrier(1, &barrier);
+	m_command_list_->RSSetViewports(1, &vp_);
+	m_command_list_->RSSetScissorRects(1, &m_scissor_rect_);
+	m_command_list_->ClearRenderTargetView(GetBackBuffer(), Colors::LightSteelBlue, 0, nullptr);
+	m_command_list_->ClearDepthStencilView(GetDSV(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+	D3D12_CPU_DESCRIPTOR_HANDLE backBuffer = GetBackBuffer();
+	D3D12_CPU_DESCRIPTOR_HANDLE dsv = GetDSV();
+	m_command_list_->OMSetRenderTargets(1, &backBuffer, true, &dsv);
+	CD3DX12_RESOURCE_BARRIER barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	m_command_list_->ResourceBarrier(1, &barrier2);
+	ThrowIfFailed(m_command_list_->Close());
+	ID3D12CommandList* cmdLists[] = { m_command_list_.Get() };
+	m_command_queue_->ExecuteCommandLists(_countof(cmdLists), cmdLists);
+	ThrowIfFailed(m_swap_chain_->Present(0, 0));
+	m_current_back_buffer_ = (m_current_back_buffer_ + 1) % 2;
+	m_current_fence_++;
+	m_command_queue_->Signal(m_fence_.Get(), m_current_fence_);
 }

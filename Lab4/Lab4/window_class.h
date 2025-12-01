@@ -1,6 +1,7 @@
 #define _WINDOW_CLASS_
 #include <Windows.h>
-
+#include "game_timer.h"
+#include "DX12App.h"
 class WindowClass 
 {
 private:
@@ -17,6 +18,7 @@ public:
 	void UpdateWnd();
 	bool CheckRegister();
 	void RegisterRawInputDevice();
+	int WRun(GameTimer* gt, DX12App* framework);
 	bool CheckCreation();
 	HWND getHWND() const { return hWnd_; }
 };

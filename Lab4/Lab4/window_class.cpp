@@ -57,3 +57,4 @@ void WindowClass::RegisterRawInputDevice() {
 		MessageBoxW(hWnd_, L"Failed to register raw input devices", L"Error", MB_OK);
 	}
 }
+

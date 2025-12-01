@@ -1,4 +1,5 @@
-#define THROW_IF_FAILED
+#ifndef THROW_IF_FAILED_
+#define THROW_IF_FAILED_
 
 #include <stdexcept>
 #include <string>
@@ -11,3 +12,5 @@ inline void ThrowIfFailed(T hr, const char* message = "DirectX operation failed"
         throw std::runtime_error(message);
     }
 }
+
+#endif //THROWIFFAILED

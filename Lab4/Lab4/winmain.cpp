@@ -6,6 +6,7 @@
 #include <comdef.h>
 #include "window_class.h"
 #include "DX12App.h"
+#include "game_timer.h"
 #pragma comment(linker, "/entry:wWinMainCRTStartup")
 HWND g_hWnd = 0;
 
@@ -37,12 +38,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	MyFramework.CreateDSV();
 	MyFramework.SetViewport();
 	MyFramework.SetScissor();
+	GameTimer gt;
 
 	wnd.RegisterRawInputDevice();
 	wnd.ShowWnd();
 	wnd.UpdateWnd();
 
-	Run();
+	wnd.WRun(&gt, &MyFramework);
 
 	return 0;
 }

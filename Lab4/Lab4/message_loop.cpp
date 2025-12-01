@@ -1,11 +1,25 @@
 #include <Windows.h>
+#include "game_timer.h"
+#include "window_class.h"
 
-int Run() {
+int WindowClass::WRun(GameTimer* gt, DX12App* framework) {
 	MSG msg = {};
+	gt->Reset();
 	while (GetMessage(&msg, NULL, 0, 0) > 0)
 	{
-		TranslateMessage(&msg);
-		DispatchMessageW(&msg);
+		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessageW(&msg);
+		}
+		else {
+			gt->Tick();
+			framework->CalculateGameStats(*gt, hWnd_);
+			framework->Update(*gt);
+			framework->Draw(*gt);
+			
+		}
+
 	}
 	return (int)msg.wParam;
 }

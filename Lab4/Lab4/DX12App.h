@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DX12APP_
+#define DX12APP_
 #include <Windows.h>
 #include <d3d12.h>
 #include <DirectXHelpers.h>
@@ -8,6 +9,7 @@
 #include <DescriptorHeap.h>
 #include <d3dx12.h>
 #include "throw_if_failed.h"
+#include "game_timer.h"
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -20,11 +22,16 @@ public:
 	void CreateSwapChain(HWND hWnd);
 	void CreateRTVAndDSVDescriptorHeaps();
 	D3D12_CPU_DESCRIPTOR_HANDLE GetBackBuffer() const;
+	ID3D12Resource* CurrentBackBuffer() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV() const;
 	void CreateRTV();
 	void CreateDSV();
 	void SetViewport();
 	void SetScissor();
+	void CalculateGameStats(GameTimer& gt, HWND hWnd);
+	void Update(const GameTimer& gt) {};
+	void Draw(const GameTimer& gt);
+	void WaitForGPU();
 private:
 	void EnableDebug();
 
@@ -36,6 +43,7 @@ private:
 	ComPtr<IDXGIFactory4> m_dxgi_factory_;
 	ComPtr<ID3D12Device> m_device_;
 	ComPtr<ID3D12Fence> m_fence_;
+	UINT64 m_current_fence_ = 0;
 	UINT m_RTV_descriptor_size_ = 0;
 	UINT m_DSV_descriptor_size_ = 0;
 	UINT m_CbvSrvUav_descriptor_size_ = 0;
@@ -58,3 +66,5 @@ private:
 	D3D12_VIEWPORT vp_;
 	D3D12_RECT m_scissor_rect_;
 };
+
+#endif //DX12APP_
