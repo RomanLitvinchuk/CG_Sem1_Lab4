@@ -32,6 +32,8 @@ public:
 	void Update(const GameTimer& gt) {};
 	void Draw(const GameTimer& gt);
 	void WaitForGPU();
+	ComPtr<ID3D12Device> GetDevice() const { return m_device_; }
+	ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return m_command_list_; }
 private:
 	void EnableDebug();
 

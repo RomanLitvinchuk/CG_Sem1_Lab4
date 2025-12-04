@@ -8,7 +8,7 @@ using namespace SimpleMath;
 
 struct Vertex {
 	Vector3 Position;
-	Vector3 Color;
+	Vector4 Color;
 };
 
 #endif //VERTEX_H_

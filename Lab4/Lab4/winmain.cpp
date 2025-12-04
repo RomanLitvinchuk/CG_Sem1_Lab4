@@ -8,6 +8,7 @@
 #include "DX12App.h"
 #include "game_timer.h"
 #include "vertex.h"
+#include "d3dUtil.h"
 #pragma comment(linker, "/entry:wWinMainCRTStartup")
 HWND g_hWnd = 0;
 
@@ -43,8 +44,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	D3D12_INPUT_ELEMENT_DESC vertex_desc[] = {
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 	};
+
+	d3dUtil Util;
+	Util.CreateVertexBuffer(MyFramework.GetDevice().Get(), MyFramework.GetCommandList().Get());
+
 
 	wnd.RegisterRawInputDevice();
 	wnd.ShowWnd();
