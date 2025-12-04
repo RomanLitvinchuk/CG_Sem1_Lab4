@@ -65,6 +65,7 @@ private:
 
 	D3D12_VIEWPORT vp_;
 	D3D12_RECT m_scissor_rect_;
+
 };
 
 #endif //DX12APP_

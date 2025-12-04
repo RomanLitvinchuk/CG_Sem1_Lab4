@@ -7,6 +7,7 @@
 #include "window_class.h"
 #include "DX12App.h"
 #include "game_timer.h"
+#include "vertex.h"
 #pragma comment(linker, "/entry:wWinMainCRTStartup")
 HWND g_hWnd = 0;
 
@@ -15,7 +16,7 @@ using namespace DX12;
 using namespace Microsoft::WRL;
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam);
-int Run();
+
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
@@ -39,6 +40,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	MyFramework.SetViewport();
 	MyFramework.SetScissor();
 	GameTimer gt;
+
+	D3D12_INPUT_ELEMENT_DESC vertex_desc[] = {
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+	};
 
 	wnd.RegisterRawInputDevice();
 	wnd.ShowWnd();
