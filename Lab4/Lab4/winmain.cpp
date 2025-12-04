@@ -40,6 +40,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	MyFramework.CreateDSV();
 	MyFramework.SetViewport();
 	MyFramework.SetScissor();
+	MyFramework.SetTopology();
 	GameTimer gt;
 
 	D3D12_INPUT_ELEMENT_DESC vertex_desc[] = {
@@ -49,7 +50,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	d3dUtil Util;
 	Util.CreateVertexBuffer(MyFramework.GetDevice().Get(), MyFramework.GetCommandList().Get());
-
+	Util.CreateIndexBuffer(MyFramework.GetDevice().Get(), MyFramework.GetCommandList().Get());
 
 	wnd.RegisterRawInputDevice();
 	wnd.ShowWnd();

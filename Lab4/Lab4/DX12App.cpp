@@ -214,3 +214,7 @@ void DX12App::Draw(const GameTimer& gt) {
 	m_current_fence_++;
 	m_command_queue_->Signal(m_fence_.Get(), m_current_fence_);
 }
+
+void DX12App::SetTopology() {
+	m_command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
