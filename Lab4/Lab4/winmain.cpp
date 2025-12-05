@@ -43,6 +43,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	MyFramework.CreateVertexBuffer();
 	MyFramework.CreateIndexBuffer();
 	MyFramework.InitUploadBuffer();
+	MyFramework.CreateCBVDescriptorHeap();
 	GameTimer gt;
 
 	D3D12_INPUT_ELEMENT_DESC vertex_desc[] = {

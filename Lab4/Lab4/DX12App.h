@@ -23,6 +23,7 @@ public:
 	void InitializeCommandObjects();
 	void CreateSwapChain(HWND hWnd);
 	void CreateRTVAndDSVDescriptorHeaps();
+	void CreateCBVDescriptorHeap();
 	D3D12_CPU_DESCRIPTOR_HANDLE GetBackBuffer() const;
 	ID3D12Resource* CurrentBackBuffer() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV() const;
@@ -76,6 +77,7 @@ private:
 
 	ComPtr<ID3D12DescriptorHeap> m_RTV_heap_;
 	ComPtr<ID3D12DescriptorHeap> m_DSV_heap_;
+	ComPtr<ID3D12DescriptorHeap> m_CBV_heap_;
 	int m_current_back_buffer_ = 0;
 
 	ComPtr<ID3D12Resource> m_swap_chain_buffer_[2];

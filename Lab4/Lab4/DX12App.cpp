@@ -103,6 +103,16 @@ void DX12App::CreateRTVAndDSVDescriptorHeaps() {
 	std::cout << "DSV heap is created" << std::endl;
 }
 
+void DX12App::CreateCBVDescriptorHeap() {
+	D3D12_DESCRIPTOR_HEAP_DESC CBVHeapDesc;
+	CBVHeapDesc.NumDescriptors = 1;
+	CBVHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	CBVHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	CBVHeapDesc.NodeMask = 0;
+	ThrowIfFailed(m_device_->CreateDescriptorHeap(&CBVHeapDesc, IID_PPV_ARGS(&m_CBV_heap_)));
+	std::cout << "CBV heap is created" << std::endl;
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE DX12App::GetBackBuffer() const {
 	return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_RTV_heap_->GetCPUDescriptorHandleForHeapStart(), m_current_back_buffer_, m_RTV_descriptor_size_);
 }
