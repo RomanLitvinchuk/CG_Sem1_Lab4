@@ -50,6 +50,8 @@ public:
 	void InitUploadBuffer();
 	void CreateConstantBufferView();
 
+	void CreateRootSignature();
+
 	ComPtr<ID3D12Device> GetDevice() const { return m_device_; }
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return m_command_list_; }
 private:
@@ -94,6 +96,10 @@ private:
 	ComPtr<ID3D12Resource> IndexBufferUploader_ = nullptr;
 
 	std::unique_ptr<UploadBuffer<ObjectConstants>> CBUploadBuffer;
+
+	ComPtr<ID3DBlob> serializedRootSig_ = nullptr;
+	ComPtr<ID3DBlob> errorBlob_ = nullptr;
+	ComPtr<ID3D12RootSignature> m_root_signature_;
 
 
 	Matrix mWorld_ = Matrix::Identity;

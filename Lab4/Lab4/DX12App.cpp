@@ -363,3 +363,17 @@ void DX12App::CreateConstantBufferView() {
 	m_device_->CreateConstantBufferView(&cbDesc, m_CBV_heap_->GetCPUDescriptorHandleForHeapStart());
 	std::cout << "Constant buffer view is created" << std::endl;
 }
+
+void DX12App::CreateRootSignature() {
+	CD3DX12_ROOT_PARAMETER slotRootParameter[1];
+	CD3DX12_DESCRIPTOR_RANGE cbvTable;
+	cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable);
+
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(1, slotRootParameter, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, serializedRootSig_.GetAddressOf(), errorBlob_.GetAddressOf());
+	ThrowIfFailed(m_device_->CreateRootSignature(0, serializedRootSig_->GetBufferPointer(), serializedRootSig_->GetBufferSize(), IID_PPV_ARGS(&m_root_signature_)));
+	std::cout << "Root Signature is created" << std::endl;
+	m_command_list_->SetGraphicsRootDescriptorTable(0, m_CBV_heap_->GetGPUDescriptorHandleForHeapStart());
+
+}
