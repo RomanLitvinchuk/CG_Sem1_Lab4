@@ -52,6 +52,9 @@ public:
 
 	void CreateRootSignature();
 	void CompileShaders();
+	void BuildLayout();
+
+	void CreatePSO();
 
 	ComPtr<ID3D12Device> GetDevice() const { return m_device_; }
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return m_command_list_; }
@@ -105,6 +108,9 @@ private:
 	ComPtr<ID3DBlob> mvsByteCode_ = nullptr;
 	ComPtr<ID3DBlob> mpsByteCode_ = nullptr;
 
+	std::vector<D3D12_INPUT_ELEMENT_DESC> m_input_layout_;
+
+	ComPtr<ID3D12PipelineState> PSO_;
 
 	Matrix mWorld_ = Matrix::Identity;
 	Matrix mView_ = Matrix::Identity;

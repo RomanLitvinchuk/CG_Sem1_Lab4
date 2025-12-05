@@ -390,3 +390,33 @@ void DX12App::CompileShaders() {
 	mpsByteCode_ = d3dUtil::CompileShader(L"shaders.hlsl", nullptr, "PS", "ps_5_0");
 	std::cout << "Pixel shader are compiled" << std::endl;
 }
+
+void DX12App::BuildLayout() {
+	m_input_layout_ =
+	{
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+	};
+	std::cout << "Layout is builded" << std::endl;
+}
+
+void DX12App::CreatePSO() {
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
+	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+	psoDesc.InputLayout = { m_input_layout_.data(), (UINT)m_input_layout_.size() };
+	psoDesc.pRootSignature = m_root_signature_.Get();
+	psoDesc.VS = { reinterpret_cast<BYTE*>(mvsByteCode_->GetBufferPointer()), mvsByteCode_->GetBufferSize() };
+	psoDesc.PS = { reinterpret_cast<BYTE*>(mpsByteCode_->GetBufferPointer()), mpsByteCode_->GetBufferSize() };
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	psoDesc.SampleMask = UINT_MAX;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = m_back_buffer_format_;
+	psoDesc.SampleDesc.Count = 1;
+	psoDesc.SampleDesc.Quality = 0;
+	psoDesc.DSVFormat = m_depth_stencil_format_;
+	ThrowIfFailed(m_device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&PSO_)));
+	std::cout << "PSO is created" << std::endl;
+}

@@ -40,6 +40,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	MyFramework.SetViewport();
 	MyFramework.SetScissor();
 	MyFramework.SetTopology();
+	MyFramework.BuildLayout();
 	MyFramework.CreateVertexBuffer();
 	MyFramework.CreateIndexBuffer();
 	MyFramework.InitUploadBuffer();
@@ -47,14 +48,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	MyFramework.CreateConstantBufferView();
 	MyFramework.CreateRootSignature();
 	MyFramework.CompileShaders();
+	MyFramework.CreatePSO();
 	GameTimer gt;
-
-	D3D12_INPUT_ELEMENT_DESC vertex_desc[] = {
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
-	};
-
-	d3dUtil Util;
 
 
 	wnd.RegisterRawInputDevice();
