@@ -83,3 +83,7 @@ void d3dUtil::CreateIndexBuffer(ID3D12Device* device, ID3D12GraphicsCommandList*
 	CmdList->IASetIndexBuffer(&ibv);
 	std::cout << "Index buffer is set" << std::endl;
 }
+
+UINT d3dUtil::CalcConstantBufferSize(UINT byteSize) {
+	return (byteSize + 255) & ~255;
+}
