@@ -377,3 +377,16 @@ void DX12App::CreateRootSignature() {
 	m_command_list_->SetGraphicsRootDescriptorTable(0, m_CBV_heap_->GetGPUDescriptorHandleForHeapStart());
 
 }
+
+void DX12App::CompileShaders() {
+	DWORD fileAttr = GetFileAttributes(L"shaders.hlsl");
+	if (fileAttr == INVALID_FILE_ATTRIBUTES) {
+		std::wcout << L"ERROR: Shader file not found!" << std::endl;
+		MessageBox(NULL, L"Shader file not found!", L"Error", MB_OK);
+		return;
+	}
+	mvsByteCode_ = d3dUtil::CompileShader(L"shaders.hlsl", nullptr, "VS", "vs_5_0");
+	std::cout << "Vertex shader are compiled" << std::endl;
+	mpsByteCode_ = d3dUtil::CompileShader(L"shaders.hlsl", nullptr, "PS", "ps_5_0");
+	std::cout << "Pixel shader are compiled" << std::endl;
+}

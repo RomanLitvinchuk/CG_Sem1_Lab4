@@ -51,6 +51,7 @@ public:
 	void CreateConstantBufferView();
 
 	void CreateRootSignature();
+	void CompileShaders();
 
 	ComPtr<ID3D12Device> GetDevice() const { return m_device_; }
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return m_command_list_; }
@@ -100,6 +101,9 @@ private:
 	ComPtr<ID3DBlob> serializedRootSig_ = nullptr;
 	ComPtr<ID3DBlob> errorBlob_ = nullptr;
 	ComPtr<ID3D12RootSignature> m_root_signature_;
+
+	ComPtr<ID3DBlob> mvsByteCode_ = nullptr;
+	ComPtr<ID3DBlob> mpsByteCode_ = nullptr;
 
 
 	Matrix mWorld_ = Matrix::Identity;
