@@ -351,3 +351,15 @@ void DX12App::InitUploadBuffer() {
 		true
 	);
 }
+
+void DX12App::CreateConstantBufferView() {
+	UINT cbByteSize = d3dUtil::CalcConstantBufferSize(sizeof(ObjectConstants));
+	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = CBUploadBuffer->Resource()->GetGPUVirtualAddress();
+	int BoxCBIndex = 0;
+	cbAddress += BoxCBIndex * cbByteSize;
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbDesc;
+	cbDesc.BufferLocation = cbAddress;
+	cbDesc.SizeInBytes = cbByteSize;
+	m_device_->CreateConstantBufferView(&cbDesc, m_CBV_heap_->GetCPUDescriptorHandleForHeapStart());
+	std::cout << "Constant buffer view is created" << std::endl;
+}

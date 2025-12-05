@@ -44,6 +44,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	MyFramework.CreateIndexBuffer();
 	MyFramework.InitUploadBuffer();
 	MyFramework.CreateCBVDescriptorHeap();
+	MyFramework.CreateConstantBufferView();
 	GameTimer gt;
 
 	D3D12_INPUT_ELEMENT_DESC vertex_desc[] = {
