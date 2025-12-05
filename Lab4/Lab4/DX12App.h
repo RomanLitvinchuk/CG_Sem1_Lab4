@@ -10,6 +10,12 @@
 #include <d3dx12.h>
 #include "throw_if_failed.h"
 #include "game_timer.h"
+#include "upload_buffer.h"
+#include "object_constants.h"
+
+struct ObjectConstants {
+	Matrix mWorldViewProj;
+};
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -17,6 +23,7 @@ using namespace DirectX;
 class DX12App
 {
 public:
+	DX12App() : CBUploadBuffer(std::make_unique<UploadBuffer<ObjectConstants>>(m_device_.Get(), 1, true)) {};
 	void InitializeDevice();
 	void InitializeCommandObjects();
 	void CreateSwapChain(HWND hWnd);
@@ -28,11 +35,23 @@ public:
 	void CreateDSV();
 	void SetViewport();
 	void SetScissor();
+
 	void CalculateGameStats(GameTimer& gt, HWND hWnd);
 	void Update(const GameTimer& gt) {};
 	void Draw(const GameTimer& gt);
+
 	void WaitForGPU();
 	void SetTopology();
+
+	void CreateVertexBuffer();
+	void CreateIndexBuffer();
+
+	void OnMouseDown(HWND hWnd, int x, int y);
+	void OnMouseUp();
+	void OnMouseMove(WPARAM btnState, int x, int y);
+
+	void Update(const GameTimer& gt);
+
 	ComPtr<ID3D12Device> GetDevice() const { return m_device_; }
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return m_command_list_; }
 private:
@@ -69,6 +88,23 @@ private:
 	D3D12_VIEWPORT vp_;
 	D3D12_RECT m_scissor_rect_;
 
+	ComPtr<ID3D12Resource> VertexBufferGPU_ = nullptr;
+	ComPtr<ID3D12Resource> VertexBufferUploader_ = nullptr;
+
+	ComPtr<ID3D12Resource> IndexBufferGPU_ = nullptr;
+	ComPtr<ID3D12Resource> IndexBufferUploader_ = nullptr;
+
+	std::unique_ptr<UploadBuffer<ObjectConstants>> CBUploadBuffer;
+
+
+	Matrix mWorld_ = Matrix::Identity;
+	Matrix mView_ = Matrix::Identity;
+	Matrix mProj_ = Matrix::Identity;
+
+	POINT m_mouse_last_pos_;
+	float mTheta_ = 1.5f * XM_PI;
+	float mPhi_ = XM_PIDIV4;
+	float mRadius_ = 5.0f;
 };
 
 #endif //DX12APP_

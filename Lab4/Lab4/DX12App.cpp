@@ -3,6 +3,12 @@
 #include <iostream>
 #include <string>
 #include <DirectXColors.h>
+#include <SimpleMath.h>
+#include "d3dUtil.h"
+#include "vertex.h"
+
+using namespace DirectX;
+using namespace DirectX::SimpleMath;
 
 void DX12App::EnableDebug() {
 #if defined(DEBUG) || defined(_DEBUG)
@@ -217,4 +223,113 @@ void DX12App::Draw(const GameTimer& gt) {
 
 void DX12App::SetTopology() {
 	m_command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+
+void DX12App::CreateVertexBuffer() {
+	Vertex vertices[] =
+	{
+		{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::White) },
+		{ XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Black) },
+		{ XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Red) },
+		{ XMFLOAT3(+1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::Green) },
+		{ XMFLOAT3(-1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Blue) },
+		{ XMFLOAT3(-1.0f, +1.0f, +1.0f), XMFLOAT4(Colors::Yellow) },
+		{ XMFLOAT3(+1.0f, +1.0f, +1.0f), XMFLOAT4(Colors::Cyan) },
+		{ XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Magenta) }
+	};
+	UINT vbByteSize = 8 * sizeof(Vertex);
+	VertexBufferGPU_ = d3dUtil::CreateDefaultBuffer(m_device_.Get(), m_command_list_.Get(), vertices, vbByteSize, VertexBufferUploader_);
+	D3D12_VERTEX_BUFFER_VIEW vbv;
+	vbv.BufferLocation = VertexBufferGPU_->GetGPUVirtualAddress();
+	vbv.SizeInBytes = vbByteSize;
+	vbv.StrideInBytes = sizeof(Vertex);
+	D3D12_VERTEX_BUFFER_VIEW VertexBuffers[1] = { vbv };
+	m_command_list_->IASetVertexBuffers(0, 1, VertexBuffers);
+	std::cout << "Vertex Buffer is set" << std::endl;
+}
+
+
+void DX12App::CreateIndexBuffer() {
+	std::uint16_t indices[] = {
+		// front face
+		0, 1, 2,
+		0, 2, 3,
+		// back face
+		4, 6, 5,
+		4, 7, 6,
+		// left face
+		4, 5, 1,
+		4, 1, 0,
+		// right face
+		3, 2, 6,
+		3, 6, 7,
+		// top face
+		1, 5, 6,
+		1, 6, 2,
+		// bottom face
+		4, 0, 3,
+		4, 3, 7
+	};
+	UINT ibByteSize = 36 * sizeof(std::uint16_t);
+	IndexBufferGPU_ = d3dUtil::CreateDefaultBuffer(m_device_.Get(), m_command_list_.Get(), indices, ibByteSize, IndexBufferUploader_);
+	D3D12_INDEX_BUFFER_VIEW ibv;
+	ibv.BufferLocation = IndexBufferGPU_->GetGPUVirtualAddress();
+	ibv.SizeInBytes = ibByteSize;
+	ibv.Format = DXGI_FORMAT_R16_UINT;
+	m_command_list_->IASetIndexBuffer(&ibv);
+	std::cout << "Index buffer is set" << std::endl;
+}
+
+
+void DX12App::OnMouseDown(HWND hWnd, int x, int y) {
+	m_mouse_last_pos_.x = x;
+	m_mouse_last_pos_.y = y;
+
+	SetCapture(hWnd);
+}
+
+void DX12App::OnMouseUp() {
+	ReleaseCapture();
+}
+
+
+void DX12App::OnMouseMove(WPARAM btnState, int x, int y) {
+	if ((btnState & MK_LBUTTON) != 0) {
+		float dx = XMConvertToRadians(0.25 * static_cast<float>(x - m_mouse_last_pos_.x));
+		float dy = XMConvertToRadians(0.25 * static_cast<float>(y - m_mouse_last_pos_.y));
+		mTheta_ += dx;
+		mPhi_ += dy;
+
+		mPhi_ = mPhi_ < 0.1f ? 0.1f : (mPhi_ > XM_PI ? XM_PI : mPhi_);
+
+	}
+	else if ((btnState & MK_RBUTTON) != 0) {
+		float dx = 0.005f * static_cast<float>(x - m_mouse_last_pos_.x);
+		float dy = 0.005f * static_cast<float>(x - m_mouse_last_pos_.y);
+
+		mRadius_ += dx - dy;
+
+		mRadius_ = mRadius_ < 3.0f ? 3.0f : (mRadius_ > 15.0f ? 15.0f : mRadius_);
+	}
+	m_mouse_last_pos_.x = x;
+	m_mouse_last_pos_.y = y;
+}
+
+void DX12App::Update(const GameTimer& gt) {
+	float x = mRadius_ * sinf(mPhi_) * cosf(mTheta_);
+	float z = mRadius_ * sinf(mPhi_) * sinf(mTheta_);
+	float y = mRadius_ * cosf(mPhi_);
+
+	Vector3 pos(x, y, z);
+	Vector3 target(0.0f, 0.0f, 0.0f);
+	Vector3 up(0.0f, 1.0f, 0.0f);
+
+	mView_ = Matrix::CreateLookAt(pos, target, up);
+	
+	Matrix WorldViewProj = mWorld_ * mView_ * mProj_;
+
+	ObjectConstants obj;
+	obj.mWorldViewProj = WorldViewProj;
+	CBUploadBuffer->CopyData(0, obj);
 }
