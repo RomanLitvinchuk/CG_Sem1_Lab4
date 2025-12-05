@@ -333,3 +333,11 @@ void DX12App::Update(const GameTimer& gt) {
 	obj.mWorldViewProj = WorldViewProj;
 	CBUploadBuffer->CopyData(0, obj);
 }
+
+void DX12App::InitUploadBuffer() {
+	CBUploadBuffer = std::make_unique<UploadBuffer<ObjectConstants>>(
+		m_device_.Get(),
+		1,
+		true
+	);
+}

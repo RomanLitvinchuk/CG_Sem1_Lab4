@@ -21,8 +21,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam)
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-
-	WindowClass wnd(hInstance, hPrevInstance);
+	DX12App MyFramework;
+	WindowClass wnd(hInstance, hPrevInstance, &MyFramework);
 	wnd.initWindow(WndProc);
 	wnd.CheckRegister();
 	wnd.CreateWnd();
@@ -31,7 +31,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	}
 	g_hWnd = wnd.getHWND();
 
-	DX12App MyFramework;
 	MyFramework.InitializeDevice();
 	MyFramework.InitializeCommandObjects();
 	MyFramework.CreateSwapChain(g_hWnd);
@@ -41,6 +40,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	MyFramework.SetViewport();
 	MyFramework.SetScissor();
 	MyFramework.SetTopology();
+	MyFramework.CreateVertexBuffer();
+	MyFramework.CreateIndexBuffer();
+	MyFramework.InitUploadBuffer();
 	GameTimer gt;
 
 	D3D12_INPUT_ELEMENT_DESC vertex_desc[] = {
@@ -49,12 +51,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	};
 
 	d3dUtil Util;
-	Util.CreateVertexBuffer(MyFramework.GetDevice().Get(), MyFramework.GetCommandList().Get());
-	Util.CreateIndexBuffer(MyFramework.GetDevice().Get(), MyFramework.GetCommandList().Get());
+
 
 	wnd.RegisterRawInputDevice();
 	wnd.ShowWnd();
-	wnd.UpdateWnd();
 
 	wnd.WRun(&gt, &MyFramework);
 

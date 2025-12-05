@@ -10,12 +10,12 @@ private:
 	WNDCLASSEX wc_;
 	HWND hWnd_ = nullptr;
 	RAWINPUTDEVICE rid_[2];
+	DX12App* framework_;
 public:
-	WindowClass(HINSTANCE hInstance, HINSTANCE hPrevInstance) : hInstance_(hInstance), hPrevInstance_(hPrevInstance) {}
+	WindowClass(HINSTANCE hInstance, HINSTANCE hPrevInstance, DX12App* pFramework) : hInstance_(hInstance), hPrevInstance_(hPrevInstance), framework_(pFramework) {}
 	void initWindow(WNDPROC WndProc);
 	void CreateWnd();
 	void ShowWnd();
-	void UpdateWnd();
 	bool CheckRegister();
 	void RegisterRawInputDevice();
 	int WRun(GameTimer* gt, DX12App* framework);

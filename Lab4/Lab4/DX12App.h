@@ -13,17 +13,12 @@
 #include "upload_buffer.h"
 #include "object_constants.h"
 
-struct ObjectConstants {
-	Matrix mWorldViewProj;
-};
-
 using namespace Microsoft::WRL;
 using namespace DirectX;
 
 class DX12App
 {
 public:
-	DX12App() : CBUploadBuffer(std::make_unique<UploadBuffer<ObjectConstants>>(m_device_.Get(), 1, true)) {};
 	void InitializeDevice();
 	void InitializeCommandObjects();
 	void CreateSwapChain(HWND hWnd);
@@ -37,7 +32,6 @@ public:
 	void SetScissor();
 
 	void CalculateGameStats(GameTimer& gt, HWND hWnd);
-	void Update(const GameTimer& gt) {};
 	void Draw(const GameTimer& gt);
 
 	void WaitForGPU();
@@ -51,6 +45,8 @@ public:
 	void OnMouseMove(WPARAM btnState, int x, int y);
 
 	void Update(const GameTimer& gt);
+
+	void InitUploadBuffer();
 
 	ComPtr<ID3D12Device> GetDevice() const { return m_device_; }
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return m_command_list_; }

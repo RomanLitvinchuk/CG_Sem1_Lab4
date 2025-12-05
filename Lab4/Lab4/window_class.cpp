@@ -17,16 +17,16 @@ void WindowClass::initWindow(WNDPROC WndProc) {
 }
 
 void WindowClass::CreateWnd() {
-	hWnd_ = CreateWindowExW(0, L"WindowClass", L"WindowName", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance_, NULL);
+	hWnd_ = CreateWindowExW(0, L"WindowClass", L"WindowName", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance_, reinterpret_cast<LPVOID>(&framework_));
 }
 
 void WindowClass::ShowWnd() {
 	ShowWindow(hWnd_, SW_SHOW);
 }
 
-void WindowClass::UpdateWnd() {
-	UpdateWindow(hWnd_);
-}
+//void WindowClass::UpdateWnd() {
+//	UpdateWindow(hWnd_);
+//}
 
 bool WindowClass::CheckRegister() {
 	if (!RegisterClassEx(&wc_)) {

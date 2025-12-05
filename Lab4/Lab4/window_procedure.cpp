@@ -1,10 +1,20 @@
 #include <Windows.h>
 #include "window_class.h"
 #include <iostream>
+#include "DX12App.h"
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    DX12App* pFramework = reinterpret_cast<DX12App*>(
+        GetWindowLongPtr(hwnd, GWLP_USERDATA));
     switch (msg)
     {
+    case WM_CREATE:
+    {
+        CREATESTRUCT* pCreate = reinterpret_cast<CREATESTRUCT*>(lParam);
+
+        SetWindowLongPtr(hwnd, GWLP_USERDATA,
+            reinterpret_cast<LONG_PTR>(pCreate->lpCreateParams));
+    }
     case WM_INPUT:
     {
         UINT dwSize = 0;
@@ -27,14 +37,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             if (raw->data.mouse.usFlags == MOUSE_MOVE_RELATIVE)
             {
-                int x = raw->data.mouse.lLastX;
-                int y = raw->data.mouse.lLastY;
+                //int x = raw->data.mouse.lLastX;
+                //int y = raw->data.mouse.lLastY;
+                pFramework->OnMouseMove(wParam, raw->data.mouse.lLastX, raw->data.mouse.lLastY);
             }
 
             USHORT buttonFlags = raw->data.mouse.usButtonFlags;
             if (buttonFlags & RI_MOUSE_LEFT_BUTTON_DOWN) {
+                pFramework->OnMouseDown(hwnd, raw->data.mouse.lLastX, raw->data.mouse.lLastY);
             }
             if (buttonFlags & RI_MOUSE_LEFT_BUTTON_UP) {
+                pFramework->OnMouseUp();
             }
         }
 
