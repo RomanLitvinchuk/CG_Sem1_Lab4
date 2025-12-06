@@ -211,27 +211,20 @@ void DX12App::FlushCommandQueue()
 
 void DX12App::Draw(const GameTimer& gt)
 {
-	// Reuse the memory associated with command recording.
-	// We can only reset when the associated command lists have finished execution on the GPU.
 	ThrowIfFailed(m_direct_cmd_list_alloc_->Reset());
 
-	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-	// Reusing the command list reuses memory.
 	ThrowIfFailed(m_command_list_->Reset(m_direct_cmd_list_alloc_.Get(), PSO_.Get()));
 
 	m_command_list_->RSSetViewports(1, &vp_);
 	m_command_list_->RSSetScissorRects(1, &m_scissor_rect_);
 
-	// Indicate a state transition on the resource usage.
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), 
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	m_command_list_->ResourceBarrier(1, &barrier);
 
-	// Clear the back buffer and depth buffer.
 	m_command_list_->ClearRenderTargetView(GetBackBuffer(), Colors::LightSteelBlue, 0, nullptr);
 	m_command_list_->ClearDepthStencilView(GetDSV(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
-	// Specify the buffers we are going to render to.
 	D3D12_CPU_DESCRIPTOR_HANDLE bb = GetBackBuffer();
 	D3D12_CPU_DESCRIPTOR_HANDLE dsv = GetDSV();
 	m_command_list_->OMSetRenderTargets(1, &bb, true, &dsv);
@@ -251,25 +244,18 @@ void DX12App::Draw(const GameTimer& gt)
 		36,
 		1, 0, 0, 0);
 
-	// Indicate a state transition on the resource usage.
 	CD3DX12_RESOURCE_BARRIER barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	m_command_list_->ResourceBarrier(1, &barrier2);
 
-	// Done recording commands.
 	ThrowIfFailed(m_command_list_->Close());
 
-	// Add the command list to the queue for execution.
 	ID3D12CommandList* cmdsLists[] = { m_command_list_.Get() };
 	m_command_queue_->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
-	// swap the back and front buffers
 	ThrowIfFailed(m_swap_chain_->Present(0, 0));
 	m_current_back_buffer_ = (m_current_back_buffer_ + 1) % 2;
 
-	// Wait until frame commands are complete.  This waiting is inefficient and is
-	// done for simplicity.  Later we will show how to organize our rendering code
-	// so we do not have to wait per frame.
 	FlushCommandQueue();
 }
 
@@ -281,10 +267,10 @@ void DX12App::InitProjectionMatrix() {
 	float aspectRatio = static_cast<float>(m_client_width_) / m_client_height_;
 
 	mProj_ = Matrix::CreatePerspectiveFieldOfView(
-		XMConvertToRadians(60.0f),  // FOV 60 градусов
-		aspectRatio,                // —оотношение сторон
-		0.1f,                       // Ѕлижн€€ плоскость
-		1000.0f                     // ƒальн€€ плоскость
+		XMConvertToRadians(60.0f),  
+		aspectRatio,                
+		0.1f,                       
+		1000.0f                    
 	);
 
 	std::cout << "Projection matrix initialized. Aspect ratio: "
@@ -361,7 +347,7 @@ void DX12App::OnMouseUp() {
 void DX12App::OnMouseMove(WPARAM btnState, int dx, int dy) {
 	if ((btnState & MK_LBUTTON) != 0)
 	{
-		std::cout << "dx=" << std::to_string(dx) << " dy=" << std::to_string(dy) << std::endl;
+		//std::cout << "dx=" << std::to_string(dx) << " dy=" << std::to_string(dy) << std::endl;
 		mTheta_ += XMConvertToRadians(0.25f * static_cast<float>(dx));
 		mPhi_ += XMConvertToRadians(0.25f * static_cast<float>(dy));
 
@@ -377,16 +363,29 @@ void DX12App::OnMouseMove(WPARAM btnState, int dx, int dy) {
 }
 
 void DX12App::Update(const GameTimer& gt) {
+	std::cout << "Phi_" << std::to_string(mPhi_) << "Theta" << std::to_string(mTheta_) << std::endl;
 	float x = mRadius_ * sinf(mPhi_) * cosf(mTheta_);
 	float z = mRadius_ * sinf(mPhi_) * sinf(mTheta_);
 	float y = mRadius_ * cosf(mPhi_);
+
+	//std::cout << "Camera pos: " << x << ", " << y << ", " << z << std::endl;
 
 	Vector3 pos(x, y, z);
 	Vector3 target(0.0f, 0.0f, 0.0f);
 	Vector3 up(0.0f, 1.0f, 0.0f);
 
 	mView_ = Matrix::CreateLookAt(pos, target, up);
-	
+	// === Debug print ===
+	/*std::cout << "mView_:" << std::endl;
+	for (int r = 0; r < 4; r++)
+	{
+		for (int c = 0; c < 4; c++)
+			std::cout << mView_(r, c) << " ";
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;*/
+
+
 	Matrix WorldViewProj = mWorld_ * mView_ * mProj_;
 	WorldViewProj = WorldViewProj.Transpose();
 

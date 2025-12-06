@@ -17,7 +17,7 @@ void WindowClass::initWindow(WNDPROC WndProc) {
 }
 
 void WindowClass::CreateWnd() {
-	hWnd_ = CreateWindowExW(0, L"WindowClass", L"WindowName", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance_, reinterpret_cast<LPVOID>(&framework_));
+	hWnd_ = CreateWindowExW(0, L"WindowClass", L"WindowName", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance_, nullptr);
 }
 
 void WindowClass::ShowWnd() {
