@@ -42,9 +42,9 @@ public:
 	void CreateVertexBuffer();
 	void CreateIndexBuffer();
 
-	void OnMouseDown(HWND hWnd, int x, int y);
+	void OnMouseDown(HWND hWnd);
 	void OnMouseUp();
-	void OnMouseMove(WPARAM btnState, int x, int y);
+	void OnMouseMove(WPARAM btnState, int dx, int dy);
 
 	void Update(const GameTimer& gt);
 
@@ -123,7 +123,7 @@ private:
 	POINT m_mouse_last_pos_;
 	float mTheta_ = XM_PIDIV4;   // 45°
 	float mPhi_ = XM_PIDIV4;   // 45°
-	float mRadius_ = 5.0f;       // камера подальше
+	float mRadius_ = 5.0f;   
 };
 
 #endif //DX12APP_

@@ -193,23 +193,16 @@ void DX12App::CalculateGameStats(GameTimer& gt, HWND hWnd) {
 
 void DX12App::FlushCommandQueue()
 {
-	// Advance the fence value to mark commands up to this fence point.
 	m_current_fence_++;
 
-	// Add an instruction to the command queue to set a new fence point.  Because we 
-	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
-	// processing all the commands prior to this Signal().
 	ThrowIfFailed(m_command_queue_->Signal(m_fence_.Get(), m_current_fence_));
 
-	// Wait until the GPU has completed commands up to this fence point.
 	if (m_fence_->GetCompletedValue() < m_current_fence_)
 	{
 		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
 
-		// Fire event when GPU hits current fence.  
 		ThrowIfFailed(m_fence_->SetEventOnCompletion(m_current_fence_, eventHandle));
 
-		// Wait until the GPU hits current fence event is fired.
 		WaitForSingleObject(eventHandle, INFINITE);
 		CloseHandle(eventHandle);
 	}
@@ -304,13 +297,14 @@ void DX12App::CreateVertexBuffer() {
 	Vertex vertices[] =
 	{
 		{ Vector3(-1.0f, -1.0f, -1.0f), Vector4(Colors::White) },
-		{ Vector3(-1.0f, +1.0f, -1.0f), Vector4(Colors::Black) },
-		{ Vector3(+1.0f, +1.0f, -1.0f), Vector4(Colors::Red) },
+		//{ Vector3(-1.0f, +1.0f, -1.0f), Vector4(Colors::Black) },
+		//{ Vector3(+1.0f, +1.0f, -1.0f), Vector4(Colors::Red) },
 		{ Vector3(+1.0f, -1.0f, -1.0f), Vector4(Colors::Green) },
 		{ Vector3(-1.0f, -1.0f, +1.0f), Vector4(Colors::Blue) },
-		{ Vector3(-1.0f, +1.0f, +1.0f), Vector4(Colors::Yellow) },
-		{ Vector3(+1.0f, +1.0f, +1.0f), Vector4(Colors::Cyan) },
-		{ Vector3(+1.0f, -1.0f, +1.0f), Vector4(Colors::Magenta) }
+		//{ Vector3(-1.0f, +1.0f, +1.0f), Vector4(Colors::Yellow) },
+		//{ Vector3(+1.0f, +1.0f, +1.0f), Vector4(Colors::Cyan) },
+		{ Vector3(+1.0f, -1.0f, +1.0f), Vector4(Colors::Magenta) },
+		{ Vector3(0.0f, +1.0f, 0.0f), Vector4(Colors::Red)}
 	};
 	UINT vbByteSize = 8 * sizeof(Vertex);
 	ThrowIfFailed(m_direct_cmd_list_alloc_->Reset());
@@ -332,23 +326,13 @@ void DX12App::CreateVertexBuffer() {
 void DX12App::CreateIndexBuffer() {
 	std::uint16_t indices[] = {
 		// front face
-		0, 1, 2,
-		0, 2, 3,
-		// back face
-		4, 6, 5,
-		4, 7, 6,
-		// left face
-		4, 5, 1,
-		4, 1, 0,
-		// right face
-		3, 2, 6,
-		3, 6, 7,
-		// top face
-		1, 5, 6,
-		1, 6, 2,
-		// bottom face
-		4, 0, 3,
-		4, 3, 7
+		0, 2, 1,
+		2, 3, 1,
+		0, 1, 4,
+		0, 2, 4,
+
+		2, 3, 4,
+		3, 1, 4
 	};
 	UINT ibByteSize = 36 * sizeof(std::uint16_t);
 	ThrowIfFailed(m_direct_cmd_list_alloc_->Reset());
@@ -365,10 +349,7 @@ void DX12App::CreateIndexBuffer() {
 }
 
 
-void DX12App::OnMouseDown(HWND hWnd, int x, int y) {
-	m_mouse_last_pos_.x = x;
-	m_mouse_last_pos_.y = y;
-
+void DX12App::OnMouseDown(HWND hWnd) {
 	SetCapture(hWnd);
 }
 
@@ -377,26 +358,22 @@ void DX12App::OnMouseUp() {
 }
 
 
-void DX12App::OnMouseMove(WPARAM btnState, int x, int y) {
-	if ((btnState & MK_LBUTTON) != 0) {
-		float dx = XMConvertToRadians(0.25 * static_cast<float>(x - m_mouse_last_pos_.x));
-		float dy = XMConvertToRadians(0.25 * static_cast<float>(y - m_mouse_last_pos_.y));
-		mTheta_ += dx;
-		mPhi_ += dy;
+void DX12App::OnMouseMove(WPARAM btnState, int dx, int dy) {
+	if ((btnState & MK_LBUTTON) != 0)
+	{
+		std::cout << "dx=" << std::to_string(dx) << " dy=" << std::to_string(dy) << std::endl;
+		mTheta_ += XMConvertToRadians(0.25f * static_cast<float>(dx));
+		mPhi_ += XMConvertToRadians(0.25f * static_cast<float>(dy));
 
 		mPhi_ = mPhi_ < 0.1f ? 0.1f : (mPhi_ > XM_PI ? XM_PI : mPhi_);
-
+		std::cout << "PHI:" << std::to_string(mPhi_) << " THETA:" << std::to_string(mTheta_);
 	}
-	else if ((btnState & MK_RBUTTON) != 0) {
-		float dx = 0.005f * static_cast<float>(x - m_mouse_last_pos_.x);
-		float dy = 0.005f * static_cast<float>(x - m_mouse_last_pos_.y);
-
-		mRadius_ += dx - dy;
+	else if ((btnState & MK_RBUTTON) != 0)
+	{
+		mRadius_ += 0.005f * static_cast<float>(dx - dy);
 
 		mRadius_ = mRadius_ < 3.0f ? 3.0f : (mRadius_ > 15.0f ? 15.0f : mRadius_);
 	}
-	m_mouse_last_pos_.x = x;
-	m_mouse_last_pos_.y = y;
 }
 
 void DX12App::Update(const GameTimer& gt) {
@@ -413,8 +390,10 @@ void DX12App::Update(const GameTimer& gt) {
 	Matrix WorldViewProj = mWorld_ * mView_ * mProj_;
 	WorldViewProj = WorldViewProj.Transpose();
 
+
 	ObjectConstants obj;
 	obj.mWorldViewProj = WorldViewProj;
+
 	CBUploadBuffer->CopyData(0, obj);
 }
 

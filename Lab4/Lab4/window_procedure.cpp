@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <windowsx.h>
 #include "window_class.h"
 #include <iostream>
 #include "DX12App.h"
@@ -36,20 +37,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         if (raw->header.dwType == RIM_TYPEMOUSE)
         {
-            if (raw->data.mouse.usFlags == MOUSE_MOVE_RELATIVE)
-            {
-                //int x = raw->data.mouse.lLastX;
-                //int y = raw->data.mouse.lLastY;
-                pFramework->OnMouseMove(wParam, raw->data.mouse.lLastX, raw->data.mouse.lLastY);
-            }
+            // Относительное движение
+            short dx = raw->data.mouse.lLastX;
+            short dy = raw->data.mouse.lLastY;
 
-            USHORT buttonFlags = raw->data.mouse.usButtonFlags;
-            if (buttonFlags & RI_MOUSE_LEFT_BUTTON_DOWN) {
-                pFramework->OnMouseDown(hwnd, raw->data.mouse.lLastX, raw->data.mouse.lLastY);
-            }
-            if (buttonFlags & RI_MOUSE_LEFT_BUTTON_UP) {
+            USHORT buttons = raw->data.mouse.usButtonFlags;
+
+            if (buttons & RI_MOUSE_LEFT_BUTTON_DOWN)
+                pFramework->OnMouseDown(hwnd);
+
+            if (buttons & RI_MOUSE_LEFT_BUTTON_UP)
                 pFramework->OnMouseUp();
-            }
+
+            bool leftDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+            pFramework->OnMouseMove(leftDown ? MK_LBUTTON : 0, dx, dy);
         }
 
         else if (raw->header.dwType == RIM_TYPEKEYBOARD)
@@ -70,15 +71,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_PAINT:
     {
-        // Важно: обработать WM_PAINT
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
-        // Очистка фона
         EndPaint(hwnd, &ps);
         return 0;
     }
     case WM_ERASEBKGND:
-        // Предотвращаем стирание фона, т.к. рисуем через DirectX
         return 1;
 
     case WM_DESTROY:
