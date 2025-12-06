@@ -130,9 +130,7 @@
     <ClCompile Include="d3dUtil.cpp" />
     <ClCompile Include="DX12App.cpp" />
     <ClCompile Include="game_timer.cpp" />
-    <ClCompile Include="message_loop.cpp" />
     <ClCompile Include="window_class.cpp" />
-    <ClCompile Include="window_procedure.cpp" />
     <ClCompile Include="winmain.cpp" />
   </ItemGroup>
   <ItemGroup>

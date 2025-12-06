@@ -282,14 +282,14 @@ void DX12App::InitProjectionMatrix() {
 void DX12App::CreateVertexBuffer() {
 	Vertex vertices[] =
 	{
-		{ Vector3(-1.0f, -1.0f, -1.0f), Vector4(Colors::White) },
+		{ Vector3(-1.0f, -1.0f, -1.0f), Vector4(Colors::Green) },
 		//{ Vector3(-1.0f, +1.0f, -1.0f), Vector4(Colors::Black) },
 		//{ Vector3(+1.0f, +1.0f, -1.0f), Vector4(Colors::Red) },
 		{ Vector3(+1.0f, -1.0f, -1.0f), Vector4(Colors::Green) },
-		{ Vector3(-1.0f, -1.0f, +1.0f), Vector4(Colors::Blue) },
+		{ Vector3(-1.0f, -1.0f, +1.0f), Vector4(Colors::Green) },
 		//{ Vector3(-1.0f, +1.0f, +1.0f), Vector4(Colors::Yellow) },
 		//{ Vector3(+1.0f, +1.0f, +1.0f), Vector4(Colors::Cyan) },
-		{ Vector3(+1.0f, -1.0f, +1.0f), Vector4(Colors::Magenta) },
+		{ Vector3(+1.0f, -1.0f, +1.0f), Vector4(Colors::Green) },
 		{ Vector3(0.0f, +1.0f, 0.0f), Vector4(Colors::Red)}
 	};
 	UINT vbByteSize = 8 * sizeof(Vertex);
@@ -311,10 +311,10 @@ void DX12App::CreateVertexBuffer() {
 
 void DX12App::CreateIndexBuffer() {
 	std::uint16_t indices[] = {
-		// front face
-		0, 2, 1,
-		2, 3, 1,
-		0, 1, 4,
+
+		1, 2, 0,
+		1, 3, 2,
+		4, 1, 0,
 		0, 2, 4,
 
 		2, 3, 4,

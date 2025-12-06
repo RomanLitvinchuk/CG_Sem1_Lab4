@@ -18,12 +18,6 @@
     <ClCompile Include="winmain.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="window_procedure.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="message_loop.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="window_class.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
