@@ -241,7 +241,7 @@ void DX12App::Draw(const GameTimer& gt)
 	m_command_list_->SetGraphicsRootDescriptorTable(0, m_CBV_heap_->GetGPUDescriptorHandleForHeapStart());
 
 	m_command_list_->DrawIndexedInstanced(
-		36,
+		objParser.GetIndexCount(),
 		1, 0, 0, 0);
 
 	CD3DX12_RESOURCE_BARRIER barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
@@ -269,8 +269,8 @@ void DX12App::InitProjectionMatrix() {
 	mProj_ = Matrix::CreatePerspectiveFieldOfView(
 		XMConvertToRadians(60.0f),  
 		aspectRatio,                
-		0.1f,                       
-		1000.0f                    
+		0.01f,                       
+		100000.0f                    
 	);
 
 	std::cout << "Projection matrix initialized. Aspect ratio: "
@@ -280,22 +280,23 @@ void DX12App::InitProjectionMatrix() {
 
 
 void DX12App::CreateVertexBuffer() {
-	Vertex vertices[] =
-	{
-		{ Vector3(-1.0f, -1.0f, -1.0f), Vector4(Colors::Green) },
-		//{ Vector3(-1.0f, +1.0f, -1.0f), Vector4(Colors::Black) },
-		//{ Vector3(+1.0f, +1.0f, -1.0f), Vector4(Colors::Red) },
-		{ Vector3(+1.0f, -1.0f, -1.0f), Vector4(Colors::Green) },
-		{ Vector3(-1.0f, -1.0f, +1.0f), Vector4(Colors::Green) },
-		//{ Vector3(-1.0f, +1.0f, +1.0f), Vector4(Colors::Yellow) },
-		//{ Vector3(+1.0f, +1.0f, +1.0f), Vector4(Colors::Cyan) },
-		{ Vector3(+1.0f, -1.0f, +1.0f), Vector4(Colors::Green) },
-		{ Vector3(0.0f, +1.0f, 0.0f), Vector4(Colors::Red)}
-	};
-	UINT vbByteSize = 8 * sizeof(Vertex);
+	//Vertex vertices[] =
+	//{
+	//	{ Vector3(-1.0f, -1.0f, -1.0f), Vector4(Colors::Green) },
+	//	//{ Vector3(-1.0f, +1.0f, -1.0f), Vector4(Colors::Black) },
+	//	//{ Vector3(+1.0f, +1.0f, -1.0f), Vector4(Colors::Red) },
+	//	{ Vector3(+1.0f, -1.0f, -1.0f), Vector4(Colors::Green) },
+	//	{ Vector3(-1.0f, -1.0f, +1.0f), Vector4(Colors::Green) },
+	//	//{ Vector3(-1.0f, +1.0f, +1.0f), Vector4(Colors::Yellow) },
+	//	//{ Vector3(+1.0f, +1.0f, +1.0f), Vector4(Colors::Cyan) },
+	//	{ Vector3(+1.0f, -1.0f, +1.0f), Vector4(Colors::Green) },
+	//	{ Vector3(0.0f, +1.0f, 0.0f), Vector4(Colors::Red)}
+	//};
+	const auto& vertices = objParser.GetVertices();
+	UINT vbByteSize = (UINT)(vertices.size() * sizeof(Vertex));
 	ThrowIfFailed(m_direct_cmd_list_alloc_->Reset());
 	ThrowIfFailed(m_command_list_->Reset(m_direct_cmd_list_alloc_.Get(), nullptr));
-	VertexBufferGPU_ = d3dUtil::CreateDefaultBuffer(m_device_.Get(), m_command_list_.Get(), vertices, vbByteSize, VertexBufferUploader_);
+	VertexBufferGPU_ = d3dUtil::CreateDefaultBuffer(m_device_.Get(), m_command_list_.Get(), vertices.data(), vbByteSize, VertexBufferUploader_);
 	ThrowIfFailed(m_command_list_->Close());
 	ID3D12CommandList* cmdsLists[] = { m_command_list_.Get() };
 	m_command_queue_->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
@@ -310,27 +311,29 @@ void DX12App::CreateVertexBuffer() {
 
 
 void DX12App::CreateIndexBuffer() {
-	std::uint16_t indices[] = {
+	//std::uint16_t indices[] = {
 
-		1, 2, 0,
-		1, 3, 2,
-		4, 1, 0,
-		0, 2, 4,
+	//	1, 2, 0,
+	//	1, 3, 2,
+	//	4, 1, 0,
+	//	0, 2, 4,
 
-		2, 3, 4,
-		3, 1, 4
-	};
-	UINT ibByteSize = 36 * sizeof(std::uint16_t);
+	//	2, 3, 4,
+	//	3, 1, 4
+	//};
+	const auto& indices = objParser.GetIndices();
+	UINT ibByteSize = (UINT)(indices.size() * sizeof(std::uint16_t));
 	ThrowIfFailed(m_direct_cmd_list_alloc_->Reset());
 	ThrowIfFailed(m_command_list_->Reset(m_direct_cmd_list_alloc_.Get(), nullptr));
-	IndexBufferGPU_ = d3dUtil::CreateDefaultBuffer(m_device_.Get(), m_command_list_.Get(), indices, ibByteSize, IndexBufferUploader_);
+	IndexBufferGPU_ = d3dUtil::CreateDefaultBuffer(m_device_.Get(), m_command_list_.Get(), indices.data(), ibByteSize, IndexBufferUploader_);
 	ThrowIfFailed(m_command_list_->Close());
 	ID3D12CommandList* cmdsLists[] = { m_command_list_.Get() };
 	m_command_queue_->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 	FlushCommandQueue();
 	ibv.BufferLocation = IndexBufferGPU_->GetGPUVirtualAddress();
 	ibv.SizeInBytes = ibByteSize;
-	ibv.Format = DXGI_FORMAT_R16_UINT;
+	ibv.Format = DXGI_FORMAT_R32_UINT;
+	objParser.SetIndexCount(indices.size());
 	std::cout << "Index buffer is set" << std::endl;
 }
 
@@ -368,22 +371,12 @@ void DX12App::Update(const GameTimer& gt) {
 	float z = mRadius_ * sinf(mPhi_) * sinf(mTheta_);
 	float y = mRadius_ * cosf(mPhi_);
 
-	//std::cout << "Camera pos: " << x << ", " << y << ", " << z << std::endl;
 
 	Vector3 pos(x, y, z);
 	Vector3 target(0.0f, 0.0f, 0.0f);
 	Vector3 up(0.0f, 1.0f, 0.0f);
 
 	mView_ = Matrix::CreateLookAt(pos, target, up);
-	// === Debug print ===
-	/*std::cout << "mView_:" << std::endl;
-	for (int r = 0; r < 4; r++)
-	{
-		for (int c = 0; c < 4; c++)
-			std::cout << mView_(r, c) << " ";
-		std::cout << std::endl;
-	}
-	std::cout << std::endl;*/
 
 
 	Matrix WorldViewProj = mWorld_ * mView_ * mProj_;
@@ -498,4 +491,9 @@ void DX12App::CreatePSO() {
 	psoDesc.DSVFormat = m_depth_stencil_format_;
 	ThrowIfFailed(m_device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&PSO_)));
 	std::cout << "PSO is created" << std::endl;
+}
+
+void DX12App::ParseFile() {
+	objParser.Load("sponza.obj");
+	std::cout << "sponza.obj is parsed" << std::endl;
 }

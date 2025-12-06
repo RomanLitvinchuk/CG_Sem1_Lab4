@@ -12,6 +12,7 @@
 #include "game_timer.h"
 #include "upload_buffer.h"
 #include "object_constants.h"
+#include "vertex.h"
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -56,6 +57,8 @@ public:
 	void BuildLayout();
 
 	void CreatePSO();
+
+	void ParseFile();
 
 	ComPtr<ID3D12Device> GetDevice() const { return m_device_; }
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return m_command_list_; }
@@ -124,6 +127,9 @@ private:
 	float mTheta_ = XM_PIDIV4;   // 45°
 	float mPhi_ = XM_PIDIV4;   // 45°
 	float mRadius_ = 5.0f;   
+
+
+	ObjLoader objParser;
 };
 
 #endif //DX12APP_

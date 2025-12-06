@@ -146,6 +146,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	MyFramework.SetTopology();
 	MyFramework.BuildLayout();
 	MyFramework.InitProjectionMatrix();
+    MyFramework.ParseFile();
 	MyFramework.CreateVertexBuffer();
 	MyFramework.CreateIndexBuffer();
 	MyFramework.InitUploadBuffer();
