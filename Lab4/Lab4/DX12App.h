@@ -35,9 +35,10 @@ public:
 	void CalculateGameStats(GameTimer& gt, HWND hWnd);
 	void Draw(const GameTimer& gt);
 
-	void WaitForGPU();
+	void FlushCommandQueue();
 	void SetTopology();
 
+	void InitProjectionMatrix();
 	void CreateVertexBuffer();
 	void CreateIndexBuffer();
 
@@ -63,8 +64,8 @@ private:
 
 	DXGI_FORMAT m_back_buffer_format_ = DXGI_FORMAT_R8G8B8A8_UNORM;
 	DXGI_FORMAT m_depth_stencil_format_ = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	UINT m_client_width_ = 800;
-	UINT m_client_height_ = 600;
+	int m_client_width_ = 800;
+	int m_client_height_ = 600;
 
 	ComPtr<IDXGIFactory4> m_dxgi_factory_;
 	ComPtr<ID3D12Device> m_device_;
@@ -95,9 +96,12 @@ private:
 
 	ComPtr<ID3D12Resource> VertexBufferGPU_ = nullptr;
 	ComPtr<ID3D12Resource> VertexBufferUploader_ = nullptr;
+	D3D12_VERTEX_BUFFER_VIEW VertexBuffers[1];
 
 	ComPtr<ID3D12Resource> IndexBufferGPU_ = nullptr;
 	ComPtr<ID3D12Resource> IndexBufferUploader_ = nullptr;
+	D3D12_INDEX_BUFFER_VIEW ibv;
+
 
 	std::unique_ptr<UploadBuffer<ObjectConstants>> CBUploadBuffer;
 
@@ -117,9 +121,9 @@ private:
 	Matrix mProj_ = Matrix::Identity;
 
 	POINT m_mouse_last_pos_;
-	float mTheta_ = 1.5f * XM_PI;
-	float mPhi_ = XM_PIDIV4;
-	float mRadius_ = 5.0f;
+	float mTheta_ = XM_PIDIV4;   // 45°
+	float mPhi_ = XM_PIDIV4;   // 45°
+	float mRadius_ = 5.0f;       // камера подальше
 };
 
 #endif //DX12APP_

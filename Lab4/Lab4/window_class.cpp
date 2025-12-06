@@ -24,9 +24,10 @@ void WindowClass::ShowWnd() {
 	ShowWindow(hWnd_, SW_SHOW);
 }
 
-//void WindowClass::UpdateWnd() {
-//	UpdateWindow(hWnd_);
-//}
+void WindowClass::UpdateWnd()
+{
+	UpdateWindow(hWnd_);
+}
 
 bool WindowClass::CheckRegister() {
 	if (!RegisterClassEx(&wc_)) {
@@ -57,4 +58,3 @@ void WindowClass::RegisterRawInputDevice() {
 		MessageBoxW(hWnd_, L"Failed to register raw input devices", L"Error", MB_OK);
 	}
 }
-

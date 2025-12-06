@@ -1,18 +1,29 @@
 cbuffer cbPerObject : register(b0)
 {
     float4x4 mWorldViewProj;
+};
+
+struct VSInput
+{
+    float3 Pos : POSITION;
+    float4 Color : COLOR;
+};
+
+struct PSInput
+{
+    float4 PosH : SV_POSITION;
+    float4 Color : COLOR;
+};
+
+PSInput VS(VSInput vin)
+{
+    PSInput vout;
+    vout.PosH = mul(float4(vin.Pos, 1.0f), mWorldViewProj);
+    vout.Color = vin.Color;
+    return vout;
 }
 
-void VS(float3 iPosL : POSITION,
-        float4 iColor : COLOR,
-        out float4 oPosH : SV_POSITION,
-        out float4 oColor : COLOR)
+float4 PS(PSInput pin) : SV_TARGET
 {
-    oPosH = mul(float4(iPosL, 1.0f), mWorldViewProj);
-    oColor = iColor;
-}
-
-float4 PS(float4 oPosH : SV_POSITION, float4 Color : COLOR) : SV_TARGET
-{
-    return Color;
+    return pin.Color;
 }

@@ -3,23 +3,28 @@
 #include "window_class.h"
 
 int WindowClass::WRun(GameTimer* gt, DX12App* framework) {
-	MSG msg = {};
-	gt->Reset();
-	while (GetMessage(&msg, NULL, 0, 0) > 0)
-	{
-		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-		{
-			TranslateMessage(&msg);
-			DispatchMessageW(&msg);
-		}
-		else {
-			gt->Tick();
-			framework->CalculateGameStats(*gt, hWnd_);
-			framework->Update(*gt);
-			framework->Draw(*gt);
-			
-		}
+    MSG msg = {};
+    gt->Reset();
 
-	}
-	return (int)msg.wParam;
+    while (true) {
+        if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT) {
+                break;
+            }
+
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+        else {
+            gt->Tick();
+
+            if (framework) {
+                framework->CalculateGameStats(*gt, hWnd_);
+                framework->Update(*gt);
+                framework->Draw(*gt);
+            }
+        }
+    }
+
+    return static_cast<int>(msg.wParam);
 }

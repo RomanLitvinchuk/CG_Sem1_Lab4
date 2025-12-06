@@ -16,6 +16,7 @@ public:
 	void initWindow(WNDPROC WndProc);
 	void CreateWnd();
 	void ShowWnd();
+	void UpdateWnd();
 	bool CheckRegister();
 	void RegisterRawInputDevice();
 	int WRun(GameTimer* gt, DX12App* framework);

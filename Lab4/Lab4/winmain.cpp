@@ -41,6 +41,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	MyFramework.SetScissor();
 	MyFramework.SetTopology();
 	MyFramework.BuildLayout();
+	MyFramework.InitProjectionMatrix();
 	MyFramework.CreateVertexBuffer();
 	MyFramework.CreateIndexBuffer();
 	MyFramework.InitUploadBuffer();
@@ -54,6 +55,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	wnd.RegisterRawInputDevice();
 	wnd.ShowWnd();
+	wnd.UpdateWnd();
+	
 
 	wnd.WRun(&gt, &MyFramework);
 

@@ -155,11 +155,9 @@ void DX12App::CreateDSV() {
 	clrValue.DepthStencil.Depth = 1.0f;
 	clrValue.DepthStencil.Stencil = 0;
 	CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
-	ThrowIfFailed(m_device_->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &dsDesc, D3D12_RESOURCE_STATE_COMMON, &clrValue, IID_PPV_ARGS(&m_DSV_buffer)));
+	ThrowIfFailed(m_device_->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &dsDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clrValue, IID_PPV_ARGS(&m_DSV_buffer)));
 	std::cout << "DSV is created" << std::endl;
 	m_device_->CreateDepthStencilView(m_DSV_buffer.Get(), nullptr, GetDSV());
-	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_DSV_buffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	m_command_list_->ResourceBarrier(1, &barrier);
 }
 
 void DX12App::SetViewport() {
@@ -169,13 +167,10 @@ void DX12App::SetViewport() {
 	vp_.Height = static_cast<float>(m_client_height_);
 	vp_.MinDepth = 0.0f;
 	vp_.MaxDepth = 1.0f;
-	m_command_list_->RSSetViewports(1, &vp_);
-	std::cout << "Viewport is set" << std::endl;
 }
 
 void DX12App::SetScissor() {
-	m_scissor_rect_ = { 0, 0, 400, 300 };
-	m_command_list_->RSSetScissorRects(1, &m_scissor_rect_);
+	m_scissor_rect_ = { 0, 0, m_client_width_, m_client_height_ };
 	std::cout << "Scissor is set" << std::endl;
 }
 
@@ -196,66 +191,140 @@ void DX12App::CalculateGameStats(GameTimer& gt, HWND hWnd) {
 	}
 }
 
-void DX12App::WaitForGPU()
+void DX12App::FlushCommandQueue()
 {
+	// Advance the fence value to mark commands up to this fence point.
+	m_current_fence_++;
+
+	// Add an instruction to the command queue to set a new fence point.  Because we 
+	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
+	// processing all the commands prior to this Signal().
+	ThrowIfFailed(m_command_queue_->Signal(m_fence_.Get(), m_current_fence_));
+
+	// Wait until the GPU has completed commands up to this fence point.
 	if (m_fence_->GetCompletedValue() < m_current_fence_)
 	{
 		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
-		m_fence_->SetEventOnCompletion(m_current_fence_, eventHandle);
+
+		// Fire event when GPU hits current fence.  
+		ThrowIfFailed(m_fence_->SetEventOnCompletion(m_current_fence_, eventHandle));
+
+		// Wait until the GPU hits current fence event is fired.
 		WaitForSingleObject(eventHandle, INFINITE);
 		CloseHandle(eventHandle);
 	}
 }
 
 
-void DX12App::Draw(const GameTimer& gt) {
-	WaitForGPU();
-	ThrowIfFailed(m_command_list_->Reset(m_direct_cmd_list_alloc_.Get(), nullptr));
-	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	m_command_list_->ResourceBarrier(1, &barrier);
+void DX12App::Draw(const GameTimer& gt)
+{
+	// Reuse the memory associated with command recording.
+	// We can only reset when the associated command lists have finished execution on the GPU.
+	ThrowIfFailed(m_direct_cmd_list_alloc_->Reset());
+
+	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
+	// Reusing the command list reuses memory.
+	ThrowIfFailed(m_command_list_->Reset(m_direct_cmd_list_alloc_.Get(), PSO_.Get()));
+
 	m_command_list_->RSSetViewports(1, &vp_);
 	m_command_list_->RSSetScissorRects(1, &m_scissor_rect_);
+
+	// Indicate a state transition on the resource usage.
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), 
+		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	m_command_list_->ResourceBarrier(1, &barrier);
+
+	// Clear the back buffer and depth buffer.
 	m_command_list_->ClearRenderTargetView(GetBackBuffer(), Colors::LightSteelBlue, 0, nullptr);
 	m_command_list_->ClearDepthStencilView(GetDSV(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-	D3D12_CPU_DESCRIPTOR_HANDLE backBuffer = GetBackBuffer();
+
+	// Specify the buffers we are going to render to.
+	D3D12_CPU_DESCRIPTOR_HANDLE bb = GetBackBuffer();
 	D3D12_CPU_DESCRIPTOR_HANDLE dsv = GetDSV();
-	m_command_list_->OMSetRenderTargets(1, &backBuffer, true, &dsv);
-	CD3DX12_RESOURCE_BARRIER barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	m_command_list_->OMSetRenderTargets(1, &bb, true, &dsv);
+
+	ID3D12DescriptorHeap* descriptorHeaps[] = { m_CBV_heap_.Get() };
+	m_command_list_->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+	m_command_list_->SetGraphicsRootSignature(m_root_signature_.Get());
+
+	m_command_list_->IASetVertexBuffers(0, 1, &VertexBuffers[0]);
+	m_command_list_->IASetIndexBuffer(&ibv);
+	m_command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	m_command_list_->SetGraphicsRootDescriptorTable(0, m_CBV_heap_->GetGPUDescriptorHandleForHeapStart());
+
+	m_command_list_->DrawIndexedInstanced(
+		36,
+		1, 0, 0, 0);
+
+	// Indicate a state transition on the resource usage.
+	CD3DX12_RESOURCE_BARRIER barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	m_command_list_->ResourceBarrier(1, &barrier2);
+
+	// Done recording commands.
 	ThrowIfFailed(m_command_list_->Close());
-	ID3D12CommandList* cmdLists[] = { m_command_list_.Get() };
-	m_command_queue_->ExecuteCommandLists(_countof(cmdLists), cmdLists);
+
+	// Add the command list to the queue for execution.
+	ID3D12CommandList* cmdsLists[] = { m_command_list_.Get() };
+	m_command_queue_->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+
+	// swap the back and front buffers
 	ThrowIfFailed(m_swap_chain_->Present(0, 0));
 	m_current_back_buffer_ = (m_current_back_buffer_ + 1) % 2;
-	m_current_fence_++;
-	m_command_queue_->Signal(m_fence_.Get(), m_current_fence_);
+
+	// Wait until frame commands are complete.  This waiting is inefficient and is
+	// done for simplicity.  Later we will show how to organize our rendering code
+	// so we do not have to wait per frame.
+	FlushCommandQueue();
 }
 
 void DX12App::SetTopology() {
 	m_command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
+void DX12App::InitProjectionMatrix() {
+	float aspectRatio = static_cast<float>(m_client_width_) / m_client_height_;
+
+	mProj_ = Matrix::CreatePerspectiveFieldOfView(
+		XMConvertToRadians(60.0f),  // FOV 60 градусов
+		aspectRatio,                // —оотношение сторон
+		0.1f,                       // Ѕлижн€€ плоскость
+		1000.0f                     // ƒальн€€ плоскость
+	);
+
+	std::cout << "Projection matrix initialized. Aspect ratio: "
+		<< aspectRatio << std::endl;
+	
+}
+
 
 void DX12App::CreateVertexBuffer() {
 	Vertex vertices[] =
 	{
-		{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::White) },
-		{ XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Black) },
-		{ XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Red) },
-		{ XMFLOAT3(+1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::Green) },
-		{ XMFLOAT3(-1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Blue) },
-		{ XMFLOAT3(-1.0f, +1.0f, +1.0f), XMFLOAT4(Colors::Yellow) },
-		{ XMFLOAT3(+1.0f, +1.0f, +1.0f), XMFLOAT4(Colors::Cyan) },
-		{ XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Magenta) }
+		{ Vector3(-1.0f, -1.0f, -1.0f), Vector4(Colors::White) },
+		{ Vector3(-1.0f, +1.0f, -1.0f), Vector4(Colors::Black) },
+		{ Vector3(+1.0f, +1.0f, -1.0f), Vector4(Colors::Red) },
+		{ Vector3(+1.0f, -1.0f, -1.0f), Vector4(Colors::Green) },
+		{ Vector3(-1.0f, -1.0f, +1.0f), Vector4(Colors::Blue) },
+		{ Vector3(-1.0f, +1.0f, +1.0f), Vector4(Colors::Yellow) },
+		{ Vector3(+1.0f, +1.0f, +1.0f), Vector4(Colors::Cyan) },
+		{ Vector3(+1.0f, -1.0f, +1.0f), Vector4(Colors::Magenta) }
 	};
 	UINT vbByteSize = 8 * sizeof(Vertex);
+	ThrowIfFailed(m_direct_cmd_list_alloc_->Reset());
+	ThrowIfFailed(m_command_list_->Reset(m_direct_cmd_list_alloc_.Get(), nullptr));
 	VertexBufferGPU_ = d3dUtil::CreateDefaultBuffer(m_device_.Get(), m_command_list_.Get(), vertices, vbByteSize, VertexBufferUploader_);
+	ThrowIfFailed(m_command_list_->Close());
+	ID3D12CommandList* cmdsLists[] = { m_command_list_.Get() };
+	m_command_queue_->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	FlushCommandQueue();
 	D3D12_VERTEX_BUFFER_VIEW vbv;
 	vbv.BufferLocation = VertexBufferGPU_->GetGPUVirtualAddress();
 	vbv.SizeInBytes = vbByteSize;
 	vbv.StrideInBytes = sizeof(Vertex);
-	D3D12_VERTEX_BUFFER_VIEW VertexBuffers[1] = { vbv };
-	m_command_list_->IASetVertexBuffers(0, 1, VertexBuffers);
+	VertexBuffers[0] = { vbv };
 	std::cout << "Vertex Buffer is set" << std::endl;
 }
 
@@ -282,12 +351,16 @@ void DX12App::CreateIndexBuffer() {
 		4, 3, 7
 	};
 	UINT ibByteSize = 36 * sizeof(std::uint16_t);
+	ThrowIfFailed(m_direct_cmd_list_alloc_->Reset());
+	ThrowIfFailed(m_command_list_->Reset(m_direct_cmd_list_alloc_.Get(), nullptr));
 	IndexBufferGPU_ = d3dUtil::CreateDefaultBuffer(m_device_.Get(), m_command_list_.Get(), indices, ibByteSize, IndexBufferUploader_);
-	D3D12_INDEX_BUFFER_VIEW ibv;
+	ThrowIfFailed(m_command_list_->Close());
+	ID3D12CommandList* cmdsLists[] = { m_command_list_.Get() };
+	m_command_queue_->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	FlushCommandQueue();
 	ibv.BufferLocation = IndexBufferGPU_->GetGPUVirtualAddress();
 	ibv.SizeInBytes = ibByteSize;
 	ibv.Format = DXGI_FORMAT_R16_UINT;
-	m_command_list_->IASetIndexBuffer(&ibv);
 	std::cout << "Index buffer is set" << std::endl;
 }
 
@@ -338,6 +411,7 @@ void DX12App::Update(const GameTimer& gt) {
 	mView_ = Matrix::CreateLookAt(pos, target, up);
 	
 	Matrix WorldViewProj = mWorld_ * mView_ * mProj_;
+	WorldViewProj = WorldViewProj.Transpose();
 
 	ObjectConstants obj;
 	obj.mWorldViewProj = WorldViewProj;
@@ -370,12 +444,35 @@ void DX12App::CreateRootSignature() {
 	cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable);
 
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(1, slotRootParameter, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, serializedRootSig_.GetAddressOf(), errorBlob_.GetAddressOf());
-	ThrowIfFailed(m_device_->CreateRootSignature(0, serializedRootSig_->GetBufferPointer(), serializedRootSig_->GetBufferSize(), IID_PPV_ARGS(&m_root_signature_)));
-	std::cout << "Root Signature is created" << std::endl;
-	m_command_list_->SetGraphicsRootDescriptorTable(0, m_CBV_heap_->GetGPUDescriptorHandleForHeapStart());
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
+		1, slotRootParameter,
+		0, nullptr,
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+	);
 
+	ComPtr<ID3DBlob> serializedRootSig = nullptr;
+	ComPtr<ID3DBlob> errorBlob = nullptr;
+
+	HRESULT hr = D3D12SerializeRootSignature(
+		&rootSigDesc,
+		D3D_ROOT_SIGNATURE_VERSION_1,
+		serializedRootSig.GetAddressOf(),
+		errorBlob.GetAddressOf()
+	);
+
+	if (errorBlob != nullptr) {
+		OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+	}
+
+	ThrowIfFailed(hr);
+	ThrowIfFailed(m_device_->CreateRootSignature(
+		0,
+		serializedRootSig->GetBufferPointer(),
+		serializedRootSig->GetBufferSize(),
+		IID_PPV_ARGS(&m_root_signature_)
+	));
+
+	std::cout << "Root Signature is created" << std::endl;
 }
 
 void DX12App::CompileShaders() {

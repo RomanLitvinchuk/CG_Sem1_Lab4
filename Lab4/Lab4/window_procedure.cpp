@@ -14,6 +14,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         SetWindowLongPtr(hwnd, GWLP_USERDATA,
             reinterpret_cast<LONG_PTR>(pCreate->lpCreateParams));
+        return 0;
     }
     case WM_INPUT:
     {
@@ -66,6 +67,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         delete[] lpb;
         return 0;
     }
+
+    case WM_PAINT:
+    {
+        // Важно: обработать WM_PAINT
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        // Очистка фона
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+    case WM_ERASEBKGND:
+        // Предотвращаем стирание фона, т.к. рисуем через DirectX
+        return 1;
 
     case WM_DESTROY:
         PostQuitMessage(0);
