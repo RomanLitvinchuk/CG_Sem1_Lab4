@@ -504,7 +504,11 @@ void DX12App::CreatePSO() {
 	psoDesc.pRootSignature = m_root_signature_.Get();
 	psoDesc.VS = { reinterpret_cast<BYTE*>(mvsByteCode_->GetBufferPointer()), mvsByteCode_->GetBufferSize() };
 	psoDesc.PS = { reinterpret_cast<BYTE*>(mpsByteCode_->GetBufferPointer()), mpsByteCode_->GetBufferSize() };
-	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	CD3DX12_RASTERIZER_DESC rastDesc(D3D12_DEFAULT);
+	//rastDesc.CullMode = D3D12_CULL_MODE_NONE;
+	rastDesc.FrontCounterClockwise = true; 
+	psoDesc.RasterizerState = rastDesc;
+	//psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
