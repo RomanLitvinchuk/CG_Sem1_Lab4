@@ -355,7 +355,7 @@ void DX12App::OnMouseMove(WPARAM btnState, int dx, int dy) {
 		mPhi_ += XMConvertToRadians(0.25f * static_cast<float>(dy));
 
 		mPhi_ = mPhi_ < 0.1f ? 0.1f : (mPhi_ > XM_PI ? XM_PI : mPhi_);
-		std::cout << "PHI:" << std::to_string(mPhi_) << " THETA:" << std::to_string(mTheta_);
+		//std::cout << "PHI:" << std::to_string(mPhi_) << " THETA:" << std::to_string(mTheta_);
 	}
 	else if ((btnState & MK_RBUTTON) != 0)
 	{
@@ -366,7 +366,7 @@ void DX12App::OnMouseMove(WPARAM btnState, int dx, int dy) {
 }
 
 void DX12App::Update(const GameTimer& gt) {
-	std::cout << "Phi_" << std::to_string(mPhi_) << "Theta" << std::to_string(mTheta_) << std::endl;
+	//std::cout << "Phi_" << std::to_string(mPhi_) << "Theta" << std::to_string(mTheta_) << std::endl;
 	float x = mRadius_ * sinf(mPhi_) * cosf(mTheta_);
 	float z = mRadius_ * sinf(mPhi_) * sinf(mTheta_);
 	float y = mRadius_ * cosf(mPhi_);

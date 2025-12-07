@@ -49,7 +49,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         if (raw->header.dwType == RIM_TYPEMOUSE)
         {
-            // Относительное движение
             short dx = raw->data.mouse.lLastX;
             short dy = raw->data.mouse.lLastY;
 
